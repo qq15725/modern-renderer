@@ -18,6 +18,18 @@
   </a>
 </p>
 
+## Features
+
+- Automatically adapted to webgl2
+
+- Cache WebGL state to avoid unwanted GPU communication
+
+- Provides simple VAO call
+
+- The native WebGL object extension state is associated with WeakMap to avoid memory leaks
+
+- TypeScript, of course
+
 ## Install
 
 ```shell
