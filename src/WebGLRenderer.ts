@@ -171,10 +171,7 @@ export class WebGLRenderer {
   public version: 1 | 2
   public extensions: WebGLExtensions
   public bindingPoints = new Map<number, WebGLTarget>()
-
   public relatedProps = new WeakMap<object, any>()
-  public maxTextures = 0
-  public placeholders = new Map<WebGLTextureTarget, WebGLTexture>()
 
   /**
    * Previous binded framebuffer
@@ -286,37 +283,6 @@ export class WebGLRenderer {
       if (drawBuffers) {
         polyfill.drawBuffers = (buffers: number[]) => drawBuffers.drawBuffersWEBGL(buffers)
       }
-    }
-
-    // init gl
-    this.viewport()
-    this.clear()
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
-    gl.enable(gl.DEPTH_TEST)
-    gl.enable(gl.CULL_FACE)
-    gl.enable(gl.BLEND)
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-    gl.depthMask(false)
-
-    // setup empty textures
-    this.maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS)
-    const texture2d = gl.createTexture()
-    if (texture2d) {
-      this.activeTexture(texture2d)
-      this.updateTexture({
-        source: new ImageData(new Uint8ClampedArray(4), 1, 1),
-      })
-      this.placeholders.set('texture_2d', texture2d)
-    }
-    const textureCubeMap = gl.createTexture()
-    if (textureCubeMap) {
-      gl.bindTexture(gl.TEXTURE_CUBE_MAP, textureCubeMap)
-      for (let i = 0; i < 6; i++) {
-        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
-      }
-      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-      this.placeholders.set('texture_cube_map', textureCubeMap)
     }
   }
 
@@ -686,29 +652,21 @@ void main() {
       )
     }
 
-    if (changed.wrapMode) {
-      const wrapMode = this.getBindingPoint(props.wrapMode)
+    const wrapMode = this.getBindingPoint(props.wrapMode)
+    this.gl.texParameteri(target, this.gl.TEXTURE_WRAP_S, wrapMode)
+    this.gl.texParameteri(target, this.gl.TEXTURE_WRAP_T, wrapMode)
 
-      this.gl.texParameteri(target, this.gl.TEXTURE_WRAP_S, wrapMode)
-      this.gl.texParameteri(target, this.gl.TEXTURE_WRAP_T, wrapMode)
+    const filterMode = this.getBindingPoint(props.filterMode.split('_')[0] as any)
+    if (props.filterMode.includes('_')) {
+      this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, this.getBindingPoint(props.filterMode))
+    } else {
+      this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, filterMode)
     }
-
-    if (changed.filterMode) {
-      const filterMode = this.getBindingPoint(props.filterMode.split('_')[0] as any)
-
-      if (props.filterMode.includes('_')) {
-        this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, this.getBindingPoint(props.filterMode))
-      } else {
-        this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, filterMode)
-      }
-
-      this.gl.texParameteri(target, this.gl.TEXTURE_MAG_FILTER, filterMode)
-    }
+    this.gl.texParameteri(target, this.gl.TEXTURE_MAG_FILTER, filterMode)
 
     // ext: anisotropicFiltering
     if (
-      changed.anisoLevel
-      && props.anisoLevel
+      props.anisoLevel
       && props.filterMode === 'linear'
       && this.extensions.anisotropicFiltering
     ) {
@@ -764,6 +722,7 @@ void main() {
     if (then?.(bindingTarget) === false) {
       changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
       changed.texture && this.gl.bindTexture(bindingTarget, oldValue)
+      textures.set(target, oldValue)
       this.texture.index = oldIndex
       this.texture.value = oldValue
     }

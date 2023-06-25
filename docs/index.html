@@ -25,8 +25,7 @@ void main() {
 uniform sampler2D sampler;
 varying vec2 vUv;
 void main() {
-  vec4 color = texture2D(sampler, vUv);
-  gl_FragColor = vec4(color.xyz, 0.5);
+  gl_FragColor = texture2D(sampler, vUv);
 }`,
   })
 
@@ -38,14 +37,22 @@ void main() {
     wrapMode: 'repeat',
   })
 
+  const image = new Image()
+  image.src = '/example.jpg'
+  image.onload = () => {
+    gl.updateTexture({ source: image })
+    gl.clear()
+    gl.draw()
+  }
+
   const buffer = gl.createBuffer({
     target: 'array_buffer',
     data: new Float32Array([
       // position uv
-      -1, -1,     0, 0,
-      +1, -1,     1, 0,
-      -1, +1,     0, 1,
-      +1, +1,     1, 1,
+      -1, -1, 0, 0,
+      +1, -1, 1, 0,
+      -1, +1, 0, 1,
+      +1, +1, 1, 1,
     ]),
     usage: 'static_draw',
   })
