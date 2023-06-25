@@ -36,6 +36,28 @@ export type WebGLDrawMode = 'points' | 'line_strip' | 'line_loop' | 'lines' | 't
 
 export type WebGLFramebufferTarget = 'framebuffer'
 
+export interface WebGLFramebufferProps {
+  /**
+   * Color attachment
+   */
+  colorTextures: (WebGLTexture | null)[]
+
+  /**
+   * Depth attachment
+   */
+  depthTexture: WebGLTexture | null
+
+  /**
+   * Stencil attachment
+   */
+  stencilTexture: WebGLTexture | null
+
+  /**
+   * Mip level
+   */
+  mipLevel: number
+}
+
 export interface WebGLProgramProps {
   /**
    * Vertex shader source
@@ -161,6 +183,39 @@ export interface WebGLDrawProps {
   first: number
   bytesPerElement: number
   instanceCount: number
+}
+
+function getAttribSize(type: WebGLTarget): number {
+  switch (type) {
+    case 'float':
+    case 'int':
+    case 'unsigned_int':
+    case 'bool':
+    case 'sampler_2d':
+      return 1
+    case 'float_vec2':
+    case 'int_vec2':
+    case 'unsigned_int_vec2':
+    case 'bool_vec2':
+      return 2
+    case 'float_vec3':
+    case 'int_vec3':
+    case 'unsigned_int_vec3':
+    case 'bool_vec3':
+      return 3
+    case 'float_vec4':
+    case 'int_vec4':
+    case 'unsigned_int_vec4':
+    case 'bool_vec4':
+    case 'float_mat2':
+      return 4
+    case 'float_mat3':
+      return 9
+    case 'float_mat4':
+      return 16
+    default:
+      return 1
+  }
 }
 
 let UID = 0
@@ -340,6 +395,7 @@ export class WebGLRenderer {
     return (this.gl as any)[target.toUpperCase()] as number
   }
 
+  public getRelatedProps(source: object, type: 'framebuffer'): WebGLFramebufferProps
   public getRelatedProps(source: object, type: 'program'): WebGLProgramProps
   public getRelatedProps(source: object, type: 'buffer'): WebGLBufferProps
   public getRelatedProps(source: object, type: 'texture'): WebGLTextureProps
@@ -351,6 +407,15 @@ export class WebGLRenderer {
     }
 
     switch (type) {
+      case 'framebuffer':
+        props = {
+          id: UID++,
+          colorTextures: [],
+          depthTexture: null,
+          stencilTexture: null,
+          mipLevel: 0,
+        } as WebGLFramebufferProps
+        break
       case 'program':
         props = {
           id: UID++,
@@ -458,39 +523,6 @@ void main() {
     props.attributes.clear()
     props.uniforms.clear()
 
-    const toAttribSize = (type: WebGLTarget): number => {
-      switch (type) {
-        case 'float':
-        case 'int':
-        case 'unsigned_int':
-        case 'bool':
-        case 'sampler_2d':
-          return 1
-        case 'float_vec2':
-        case 'int_vec2':
-        case 'unsigned_int_vec2':
-        case 'bool_vec2':
-          return 2
-        case 'float_vec3':
-        case 'int_vec3':
-        case 'unsigned_int_vec3':
-        case 'bool_vec3':
-          return 3
-        case 'float_vec4':
-        case 'int_vec4':
-        case 'unsigned_int_vec4':
-        case 'bool_vec4':
-        case 'float_mat2':
-          return 4
-        case 'float_mat3':
-          return 9
-        case 'float_mat4':
-          return 16
-        default:
-          return 1
-      }
-    }
-
     for (
       let len = this.gl.getProgramParameter(program, this.gl.ACTIVE_ATTRIBUTES), i = 0;
       i < len;
@@ -505,7 +537,7 @@ void main() {
       props.attributes.set(attrib.name, {
         type,
         name: attrib.name,
-        size: toAttribSize(type),
+        size: getAttribSize(type),
         location: this.gl.getAttribLocation(program, attrib.name),
       })
     }
@@ -551,41 +583,65 @@ void main() {
     }
   }
 
-  public updateFramebuffer(
-    colorTextures: (WebGLTexture | null)[],
-    depthTexture?: WebGLTexture | null,
-    mipLevel = 0,
-  ) {
-    for (let len = colorTextures.length, i = 0; i < len; i++) {
-      const texture = colorTextures[i]
+  public createFramebuffer(propsData?: Partial<WebGLFramebufferProps>): WebGLFramebuffer {
+    const framebuffer = this.gl.createFramebuffer()
 
-      this.activeTexture(texture, target => {
-        this.gl.framebufferTexture2D(
-          this.gl.FRAMEBUFFER,
-          this.gl.COLOR_ATTACHMENT0 + i,
-          target,
-          texture,
-          mipLevel,
-        )
+    if (!framebuffer) {
+      throw new Error('failed to createFramebuffer')
+    }
 
-        return false
+    if (propsData) {
+      this.activeFramebuffer(framebuffer, () => {
+        this.updateFramebuffer(propsData)
       })
     }
 
-    if (colorTextures.length > 1 && 'drawBuffers' in this.gl) {
+    return framebuffer
+  }
+
+  public updateFramebuffer(propsData: Partial<WebGLFramebufferProps>) {
+    const framebuffer = this.framebuffer.value
+
+    if (!framebuffer) return
+
+    const props = this.getRelatedProps(framebuffer, 'framebuffer')
+
+    for (const key in propsData) {
+      (props as any)[key] = (propsData as any)[key]
+    }
+
+    if (props.colorTextures) {
+      for (let len = props.colorTextures.length, i = 0; i < len; i++) {
+        const texture = props.colorTextures[i]
+
+        this.activeTexture(texture, target => {
+          this.gl.framebufferTexture2D(
+            this.gl.FRAMEBUFFER,
+            this.gl.COLOR_ATTACHMENT0 + i,
+            target,
+            texture,
+            props.mipLevel,
+          )
+
+          return false
+        })
+      }
+    }
+
+    if (props.colorTextures.length > 1 && 'drawBuffers' in this.gl) {
       this.gl.drawBuffers(
-        colorTextures.map((_, i) => this.gl.COLOR_ATTACHMENT0 + i),
+        props.colorTextures.map((_, i) => this.gl.COLOR_ATTACHMENT0 + i),
       )
     }
 
-    if (depthTexture && (this.version > 1 || this.extensions.depthTexture)) {
-      this.activeTexture(depthTexture, target => {
+    if (props.depthTexture && (this.version > 1 || this.extensions.depthTexture)) {
+      this.activeTexture(props.depthTexture, target => {
         this.gl.framebufferTexture2D(
           this.gl.FRAMEBUFFER,
           this.gl.DEPTH_ATTACHMENT,
           target,
-          depthTexture,
-          mipLevel,
+          props.depthTexture,
+          props.mipLevel,
         )
 
         return false
@@ -604,10 +660,10 @@ void main() {
     }
 
     changed.value && this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer)
+    this.framebuffer.value = framebuffer
     if (then?.() === false) {
       changed.value && this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, oldValue)
-    } else if (changed.value) {
-      this.framebuffer.value = framebuffer
+      this.framebuffer.value = oldValue
     }
   }
 
