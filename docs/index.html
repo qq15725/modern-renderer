@@ -10,58 +10,66 @@
 <script type="module">
   import { WebGLRenderer } from '../src'
 
-  const gl = new WebGLRenderer(document.querySelector('canvas'))
+  const renderer = new WebGLRenderer(document.querySelector('canvas'))
 
-  const program = gl.createProgram({
+  const program = renderer.createProgram({
     vert: `precision mediump float;
 attribute vec2 position;
 attribute vec2 uv;
+attribute float textureId;
 varying vec2 vUv;
+varying float vTextureId;
 void main() {
   gl_Position = vec4(position, 0, 1);
   vUv = uv;
+  vTextureId = textureId;
 }`,
     frag: `precision mediump float;
-uniform sampler2D sampler;
+varying float vTextureId;
+uniform sampler2D uSamplers[2];
 varying vec2 vUv;
 void main() {
-  gl_FragColor = texture2D(sampler, vUv);
+  if (vTextureId < 0.5) {
+    gl_FragColor = texture2D(uSamplers[0], vUv);
+  } else {
+    gl_FragColor = texture2D(uSamplers[1], vUv);
+  }
 }`,
   })
 
-  const texture = gl.createTexture({
+  const texture1 = renderer.createTexture({
     index: 0,
-    target: 'texture_2d',
-    source: new ImageData(1, 1, new Uint8ClampedArray(4)),
-    filterMode: 'linear',
-    wrapMode: 'repeat',
   })
 
-  const image = new Image()
-  image.src = '/example.jpg'
-  image.onload = () => {
-    gl.updateTexture({ source: image })
-    gl.clear()
-    gl.draw()
-  }
+  const texture2 = renderer.createTexture({
+    index: 1,
+    source: new ImageData(new Uint8ClampedArray([255, 0, 0, 100]), 1, 1),
+  })
 
-  const buffer = gl.createBuffer({
+  const buffer = renderer.createBuffer({
     target: 'array_buffer',
     data: new Float32Array([
-      // position uv
-      -1, -1, 0, 0,
-      +1, -1, 1, 0,
-      -1, +1, 0, 1,
-      +1, +1, 1, 1,
+      // position uv textureId
+      -0.5, -0.5, 0, 0, 0,
+      +0.5, -0.5, 1, 0, 0,
+      -0.5, +0.5, 0, 1, 0,
+      +0.5, +0.5, 1, 1, 0,
+      // position uv textureId
+      -1, -1, 0, 0, 1,
+      +1, -1, 1, 0, 1,
+      -1, +1, 0, 1, 1,
+      +1, +1, 1, 1, 1,
     ]),
     usage: 'static_draw',
   })
 
-  const indexBuffer = gl.createBuffer({
+  const indexBuffer = renderer.createBuffer({
     target: 'element_array_buffer',
     data: new Uint16Array([
       0, 1, 2,
       1, 3, 2,
+      0 + 4, 1 + 4, 2 + 4,
+      1 + 4, 3 + 4, 2 + 4,
     ]),
     usage: 'static_draw',
   })
@@ -71,26 +79,39 @@ void main() {
       position: { buffer, size: 2, normalized: false, type: 'float' },
       uv: { buffer, size: 2, normalized: false, type: 'float' },
       // color: { buffer, size: 4, normalized: true, type: 'unsigned_byte' },
-      // textureId: { buffer, size: 1, normalized: true, type: 'float' },
+      textureId: { buffer, size: 1, normalized: true, type: 'float' },
     },
     indexBuffer,
   }
 
-  gl.activeProgram(program)
-  const vertexArray = gl.createVertexArray(vertexArrayProps)
+  renderer.gl.pixelStorei(renderer.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+  renderer.gl.enable(renderer.gl.DEPTH_TEST)
+  renderer.gl.enable(renderer.gl.CULL_FACE)
+  renderer.gl.enable(renderer.gl.BLEND)
+  renderer.gl.blendFunc(renderer.gl.ONE, renderer.gl.ONE_MINUS_SRC_ALPHA)
+  renderer.gl.depthMask(false)
 
-  gl.activeProgram(program)
-  gl.activeTexture(texture)
-  gl.activeVertexArray(vertexArray ?? vertexArrayProps)
+  renderer.activeProgram(program)
+  const vertexArray = renderer.createVertexArray(vertexArrayProps)
 
-  gl.updateUniforms({
-    sampler: 0,
+  renderer.activeProgram(program)
+  renderer.activeVertexArray(vertexArray ?? vertexArrayProps)
+
+  renderer.updateUniforms({
+    uSamplers: new Int32Array([0, 1]),
   })
 
-  gl.draw()
+  const image = new Image()
+  image.src = '/example.jpg'
+  image.onload = () => {
+    renderer.activeTexture(texture1)
+    renderer.updateTexture({ source: image })
+    renderer.activeTexture(texture2)
+    renderer.draw()
+  }
 
   // eslint-disable-next-line no-console
-  console.log(gl)
+  console.log(renderer)
 </script>
 </body>
 </html>
