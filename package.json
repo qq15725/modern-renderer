@@ -1,23 +1,27 @@
 {
-  "name": "starter-ts",
+  "name": "modern-renderer",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.0",
   "packageManager": "pnpm@7.26.2",
-  "description": "Starter template for TypeScript library",
+  "description": "Renderers on modern browser",
   "author": "wxm",
   "license": "MIT",
-  "homepage": "https://github.com/qq15725/starter-ts",
+  "homepage": "https://github.com/qq15725/modern-renderer",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qq15725/starter-ts.git"
+    "url": "git+https://github.com/qq15725/modern-renderer.git"
   },
   "bugs": {
-    "url": "https://github.com/qq15725/starter-ts/issues"
+    "url": "https://github.com/qq15725/modern-renderer/issues"
   },
   "keywords": [
-    "starter",
-    "template",
-    "typescript"
+    "webgl",
+    "gl",
+    "graphics",
+    "computer graphics",
+    "opengl",
+    "glsl",
+    "renderer"
   ],
   "sideEffects": false,
   "exports": {
@@ -44,7 +48,7 @@
     "types"
   ],
   "scripts": {
-    "dev": "vite",
+    "dev": "vite docs",
     "lint": "eslint src",
     "test": "vitest --no-threads --no-isolate",
     "build": "vite build && tsc --project tsconfig.build.json",

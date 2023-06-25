@@ -1,35 +1,82 @@
-<h1 align="center">starter-ts</h1>
+<h1 align="center">modern-renderer</h1>
 
 <p align="center">
-  <a href="https://unpkg.com/starter-ts">
-    <img src="https://img.shields.io/bundlephobia/minzip/starter-ts" alt="Minzip">
+  <a href="https://unpkg.com/modern-renderer">
+    <img src="https://img.shields.io/bundlephobia/minzip/modern-renderer" alt="Minzip">
   </a>
-  <a href="https://www.npmjs.com/package/starter-ts">
-    <img src="https://img.shields.io/npm/v/starter-ts.svg" alt="Version">
+  <a href="https://www.npmjs.com/package/modern-renderer">
+    <img src="https://img.shields.io/npm/v/modern-renderer.svg" alt="Version">
   </a>
-  <a href="https://www.npmjs.com/package/starter-ts">
-    <img src="https://img.shields.io/npm/dm/starter-ts" alt="Downloads">
+  <a href="https://www.npmjs.com/package/modern-renderer">
+    <img src="https://img.shields.io/npm/dm/modern-renderer" alt="Downloads">
   </a>
-  <a href="https://github.com/qq15725/starter-ts/issues">
-    <img src="https://img.shields.io/github/issues/qq15725/starter-ts" alt="Issues">
+  <a href="https://github.com/qq15725/modern-renderer/issues">
+    <img src="https://img.shields.io/github/issues/qq15725/modern-renderer" alt="Issues">
   </a>
-  <a href="https://github.com/qq15725/starter-ts/blob/main/LICENSE">
-    <img src="https://img.shields.io/npm/l/starter-ts.svg" alt="License">
+  <a href="https://github.com/qq15725/modern-renderer/blob/main/LICENSE">
+    <img src="https://img.shields.io/npm/l/modern-renderer.svg" alt="License">
   </a>
 </p>
 
-## Try it now!
+## Install
 
-### GitHub Template
+```shell
+npm i modern-renderer
+```
 
-[Create a repo from this template on GitHub](https://github.com/qq15725/starter-ts/generate).
+## Usage
 
-### Clone to local
+```ts
+import { WebGLRenderer } from 'modern-renderer'
 
-If you prefer to do it manually with the cleaner git history
+const renderer = new WebGLRenderer(document.querySelector('canvas'))
 
-```bash
-npx degit qq15725/starter-ts my-ts-lib
-cd my-ts-lib
-pnpm i # If you don't have pnpm installed, run: npm install -g pnpm
+const program = gl.createProgram({
+  vert: `precision mediump float;
+attribute vec2 position;
+void main() {
+  gl_Position = vec4(position, 0, 1);
+}`,
+  frag: `precision mediump float;
+uniform vec4 color;
+void main() {
+  gl_FragColor = color;
+}`,
+})
+
+const vertexBuffer = gl.createBuffer({
+  target: 'array_buffer',
+  data: new Float32Array([
+    -1, -1, +1, -1,
+    -1, +1, +1, +1,
+  ]),
+  usage: 'static_draw',
+})
+
+const indexBuffer = gl.createBuffer({
+  target: 'element_array_buffer',
+  data: new Uint16Array([
+    0, 1, 2,
+    1, 3, 2,
+  ]),
+  usage: 'static_draw',
+})
+
+const vertexArray = {
+  attributes: {
+    position: vertexBuffer,
+  },
+  indexBuffer,
+}
+
+gl.activeProgram(program)
+const VAO = gl.createVertexArray(vertexArray)
+
+gl.activeProgram(program)
+gl.activeTexture(texture)
+gl.activeVertexArray(VAO ?? vertexArray)
+gl.updateUniforms({
+  color: [0, 1, 0, 1],
+})
+gl.draw()
 ```
