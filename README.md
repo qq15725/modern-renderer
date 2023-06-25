@@ -73,7 +73,6 @@ renderer.activeProgram(program)
 const vao = renderer.createVertexArray(vertexArray)
 
 renderer.activeProgram(program)
-renderer.activeTexture(texture)
 renderer.activeVertexArray(vao ?? vertexArray)
 renderer.updateUniforms({
   color: [0, 1, 0, 1],
