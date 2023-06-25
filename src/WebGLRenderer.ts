@@ -981,19 +981,50 @@ void main() {
             this.gl.uniform1f(location, value)
           }
           break
+        case 'unsigned_int':
+          if (isArray) {
+            (this.gl as WebGL2RenderingContext).uniform1uiv(location, value)
+          } else {
+            (this.gl as WebGL2RenderingContext).uniform1ui(location, value)
+          }
+          break
         case 'bool':
         case 'int':
+        case 'sampler_2d':
+        case 'sampler_cube':
+        case 'sampler_2d_array':
           if (isArray) {
             this.gl.uniform1iv(location, value)
           } else {
             this.gl.uniform1i(location, value)
           }
           break
+        case 'bool_vec2':
+        case 'int_vec2':
+          this.gl.uniform2iv(location, value)
+          break
+        case 'unsigned_int_vec2':
+          (this.gl as WebGL2RenderingContext).uniform2uiv(location, value)
+          break
         case 'float_vec2':
           this.gl.uniform2fv(location, value)
           break
+        case 'bool_vec3':
+        case 'int_vec3':
+          this.gl.uniform3iv(location, value)
+          break
+        case 'unsigned_int_vec3':
+          (this.gl as WebGL2RenderingContext).uniform3uiv(location, value)
+          break
         case 'float_vec3':
           this.gl.uniform3fv(location, value)
+          break
+        case 'bool_vec4':
+        case 'int_vec4':
+          this.gl.uniform4iv(location, value)
+          break
+        case 'unsigned_int_vec4':
+          (this.gl as WebGL2RenderingContext).uniform4uiv(location, value)
           break
         case 'float_vec4':
           this.gl.uniform4fv(location, value)
@@ -1006,9 +1037,6 @@ void main() {
           break
         case 'float_mat4':
           this.gl.uniformMatrix4fv(location, false, value)
-          break
-        case 'sampler_2d':
-          this.gl.uniform1i(location, value)
           break
       }
     }
