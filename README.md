@@ -31,7 +31,7 @@ import { WebGLRenderer } from 'modern-renderer'
 
 const renderer = new WebGLRenderer(document.querySelector('canvas'))
 
-const program = gl.createProgram({
+const program = renderer.createProgram({
   vert: `precision mediump float;
 attribute vec2 position;
 void main() {
@@ -44,7 +44,7 @@ void main() {
 }`,
 })
 
-const vertexBuffer = gl.createBuffer({
+const vertexBuffer = renderer.createBuffer({
   target: 'array_buffer',
   data: new Float32Array([
     -1, -1, +1, -1,
@@ -53,7 +53,7 @@ const vertexBuffer = gl.createBuffer({
   usage: 'static_draw',
 })
 
-const indexBuffer = gl.createBuffer({
+const indexBuffer = renderer.createBuffer({
   target: 'element_array_buffer',
   data: new Uint16Array([
     0, 1, 2,
@@ -69,14 +69,14 @@ const vertexArray = {
   indexBuffer,
 }
 
-gl.activeProgram(program)
-const VAO = gl.createVertexArray(vertexArray)
+renderer.activeProgram(program)
+const VAO = renderer.createVertexArray(vertexArray)
 
-gl.activeProgram(program)
-gl.activeTexture(texture)
-gl.activeVertexArray(VAO ?? vertexArray)
-gl.updateUniforms({
+renderer.activeProgram(program)
+renderer.activeTexture(texture)
+renderer.activeVertexArray(VAO ?? vertexArray)
+renderer.updateUniforms({
   color: [0, 1, 0, 1],
 })
-gl.draw()
+renderer.draw()
 ```
