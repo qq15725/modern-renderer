@@ -240,7 +240,7 @@ export class WebGLRenderer {
     }
 
   public constructor(view: HTMLCanvasElement) {
-    let gl = view.getContext('webgl2')
+    let gl: any = view.getContext('webgl2')
     let version: 1 | 2 = 2
 
     if (!gl) {
