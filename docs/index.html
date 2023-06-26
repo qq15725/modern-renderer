@@ -86,17 +86,14 @@ void main() {
 
   renderer.gl.pixelStorei(renderer.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
   renderer.gl.enable(renderer.gl.DEPTH_TEST)
-  renderer.gl.enable(renderer.gl.CULL_FACE)
   renderer.gl.enable(renderer.gl.BLEND)
   renderer.gl.blendFunc(renderer.gl.ONE, renderer.gl.ONE_MINUS_SRC_ALPHA)
   renderer.gl.depthMask(false)
 
-  renderer.activeProgram(program)
-  const vertexArray = renderer.createVertexArray(vertexArrayProps)
+  const vertexArray = renderer.createVertexArray(vertexArrayProps, program)
 
   renderer.activeProgram(program)
   renderer.activeVertexArray(vertexArray ?? vertexArrayProps)
-
   renderer.updateUniforms({
     uSamplers: new Int32Array([0, 1]),
   })
@@ -104,8 +101,8 @@ void main() {
   const image = new Image()
   image.src = '/example.jpg'
   image.onload = () => {
+    renderer.updateTexture(texture1, { source: image })
     renderer.activeTexture(texture1)
-    renderer.updateTexture({ source: image })
     renderer.activeTexture(texture2)
     renderer.draw()
   }

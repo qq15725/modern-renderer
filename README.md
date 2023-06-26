@@ -81,8 +81,7 @@ const vertexArray = {
   indexBuffer,
 }
 
-renderer.activeProgram(program)
-const vao = renderer.createVertexArray(vertexArray)
+const vao = renderer.createVertexArray(vertexArray, program)
 
 renderer.activeProgram(program)
 renderer.activeVertexArray(vao ?? vertexArray)

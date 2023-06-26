@@ -32,11 +32,14 @@ export interface WebGLExtensions {
   colorBufferFloat?: EXT_color_buffer_float | null
 }
 
-export type WebGLDrawMode = 'points' | 'line_strip' | 'line_loop' | 'lines' | 'triangle_strip' | 'triangle_fan' | 'triangles'
-
 export type WebGLFramebufferTarget = 'framebuffer'
 
 export interface WebGLFramebufferProps {
+  /**
+   * ID
+   */
+  id: number
+
   /**
    * Color attachment
    */
@@ -58,7 +61,14 @@ export interface WebGLFramebufferProps {
   mipLevel: number
 }
 
+export type WebGLFramebufferPropsData = Partial<Omit<WebGLFramebufferProps, 'id'>>
+
 export interface WebGLProgramProps {
+  /**
+   * ID
+   */
+  id: number
+
   /**
    * Vertex shader source
    */
@@ -92,13 +102,15 @@ export interface WebGLProgramProps {
   }>
 }
 
+export type WebGLProgramPropsData = Partial<Omit<WebGLProgramProps, 'id' | 'attributes' | 'uniforms'>>
+
 export type WebGLTextureIndex = number
 
 export type WebGLTextureTarget = 'texture_2d' | 'texture_cube_map'
 
 export interface WebGLTextureProps {
   /**
-   * UUID
+   * ID
    */
   id: number
 
@@ -133,6 +145,8 @@ export interface WebGLTextureProps {
   anisoLevel: number
 }
 
+export type WebGLTexturePropsData = Partial<Omit<WebGLTextureProps, 'id'>>
+
 export type WebGLVertexAttribType = 'float' | 'unsigned_byte' | 'unsigned_short'
 
 export interface WebGLVertexAttribProps {
@@ -151,7 +165,7 @@ export type WebGLBufferUsage = 'static_draw' | 'dynamic_draw'
 
 export interface WebGLBufferProps extends Omit<WebGLVertexAttribProps, 'buffer'> {
   /**
-   * UUID
+   * ID
    */
   id: number
 
@@ -171,11 +185,23 @@ export interface WebGLBufferProps extends Omit<WebGLVertexAttribProps, 'buffer'>
   usage: WebGLBufferUsage
 }
 
+export type WebGLBufferPropsData = Partial<Omit<WebGLBufferProps, 'id'>>
+
 export interface WebGLVertexArrayProps {
+  /**
+   * Vertex attributes
+   */
   attributes: Record<string, WebGLBuffer | WebGLVertexAttribProps>
 
+  /**
+   * Index buffer
+   */
   indexBuffer?: WebGLBuffer
 }
+
+export type WebGLVertexArrayPropsData = Partial<WebGLVertexArrayProps>
+
+export type WebGLDrawMode = 'points' | 'line_strip' | 'line_loop' | 'lines' | 'triangle_strip' | 'triangle_fan' | 'triangles'
 
 export interface WebGLDrawProps {
   mode: WebGLDrawMode
@@ -475,7 +501,7 @@ void main() {
     return shader
   }
 
-  public createProgram(propsData?: Partial<Pick<WebGLProgramProps, 'vert' | 'frag'>>): WebGLProgram {
+  public createProgram(propsData?: WebGLProgramPropsData): WebGLProgram {
     const program = this.gl.createProgram()
 
     if (!program) {
@@ -483,16 +509,24 @@ void main() {
     }
 
     if (propsData) {
-      const oldValue = this.program.value
-      this.program.value = program
-      this.updateProgram(propsData)
-      this.program.value = oldValue
+      this.updateProgram(program, propsData)
     }
 
     return program
   }
 
-  public updateProgram(propsData: Partial<Pick<WebGLProgramProps, 'vert' | 'frag'>>): void {
+  public updateProgram(propsData: WebGLProgramPropsData): void
+  public updateProgram(program: WebGLProgram, propsData: WebGLProgramPropsData): void
+  public updateProgram(...args: any[]): void {
+    if (args.length > 1) {
+      const oldValue = this.program.value
+      this.program.value = args[0]
+      this.updateProgram(args[1])
+      this.program.value = oldValue
+      return
+    }
+
+    const propsData = args[0]
     const program = this.program.value
 
     if (!program) return
@@ -583,7 +617,7 @@ void main() {
     }
   }
 
-  public createFramebuffer(propsData?: Partial<WebGLFramebufferProps>): WebGLFramebuffer {
+  public createFramebuffer(propsData?: WebGLFramebufferPropsData): WebGLFramebuffer {
     const framebuffer = this.gl.createFramebuffer()
 
     if (!framebuffer) {
@@ -591,15 +625,23 @@ void main() {
     }
 
     if (propsData) {
-      this.activeFramebuffer(framebuffer, () => {
-        this.updateFramebuffer(propsData)
-      })
+      this.updateFramebuffer(framebuffer, propsData)
     }
 
     return framebuffer
   }
 
-  public updateFramebuffer(propsData: Partial<WebGLFramebufferProps>) {
+  public updateFramebuffer(propsData: WebGLFramebufferPropsData): void
+  public updateFramebuffer(framebuffer: WebGLFramebuffer, propsData: WebGLFramebufferPropsData): void
+  public updateFramebuffer(...args: any[]): void {
+    if (args.length > 1) {
+      return this.activeFramebuffer(args[0], () => {
+        this.updateFramebuffer(args[1])
+        return false
+      })
+    }
+
+    const propsData = args[0]
     const framebuffer = this.framebuffer.value
 
     if (!framebuffer) return
@@ -667,7 +709,7 @@ void main() {
     }
   }
 
-  public createTexture(propsData?: Partial<WebGLTextureProps>): WebGLTexture {
+  public createTexture(propsData?: WebGLTexturePropsData): WebGLTexture {
     const texture = this.gl.createTexture()
 
     if (!texture) {
@@ -675,17 +717,27 @@ void main() {
     }
 
     if (propsData) {
-      this.activeTexture(texture, () => {
-        this.updateTexture(propsData)
-
-        return false
-      })
+      this.updateTexture(texture, propsData)
     }
 
     return texture
   }
 
-  public updateTexture(propsData: Partial<WebGLTextureProps>): void {
+  public updateTexture(propsData: WebGLTexturePropsData): void
+  public updateTexture(texture: WebGLTexture, propsData: WebGLTexturePropsData): void
+  public updateTexture(...args: any[]): void {
+    if (args.length > 1) {
+      return this.activeTexture({
+        index: args[1].index,
+        target: args[1].target,
+        value: args[0],
+      }, () => {
+        this.updateTexture(args[1])
+        return false
+      })
+    }
+
+    const propsData = args[0]
     const texture = this.texture.value
 
     if (!texture) return
@@ -744,8 +796,8 @@ void main() {
 
   public activeTexture(
     texture: WebGLTexture | null | {
-      target?: WebGLTextureTarget
       index?: WebGLTextureIndex
+      target?: WebGLTextureTarget
       value: WebGLTexture | null
     },
     then?: (target: number) => void | false,
@@ -784,7 +836,7 @@ void main() {
     }
   }
 
-  public createBuffer(propsData?: Partial<WebGLBufferProps>): WebGLBuffer {
+  public createBuffer(propsData?: WebGLBufferPropsData): WebGLBuffer {
     const buffer = this.gl.createBuffer()
 
     if (!buffer) {
@@ -792,20 +844,26 @@ void main() {
     }
 
     if (propsData) {
-      this.activeBuffer({
-        target: propsData.target,
-        value: buffer,
-      }, () => {
-        this.updateBuffer(propsData)
-
-        return false
-      })
+      this.updateBuffer(buffer, propsData)
     }
 
     return buffer
   }
 
-  public updateBuffer(propsData: Partial<WebGLBufferProps>): void {
+  public updateBuffer(propsData: WebGLBufferPropsData): void
+  public updateBuffer(buffer: WebGLBuffer, propsData: WebGLBufferPropsData): void
+  public updateBuffer(...args: any[]): void {
+    if (args.length > 1) {
+      return this.activeBuffer({
+        target: args[1].target,
+        value: args[0],
+      }, () => {
+        this.updateBuffer(args[1])
+        return false
+      })
+    }
+
+    const propsData = args[0]
     const buffer = this.buffer.value
 
     if (!buffer) return
@@ -891,7 +949,10 @@ void main() {
     }
   }
 
-  public createVertexArray(propsData?: Partial<WebGLVertexArrayProps>): WebGLVertexArrayObject | null {
+  public createVertexArray(
+    propsData?: WebGLVertexArrayPropsData,
+    program?: WebGLProgram,
+  ): WebGLVertexArrayObject | null {
     if ('createVertexArray' in this.gl) {
       const vertexArray = this.gl.createVertexArray()
 
@@ -900,10 +961,7 @@ void main() {
       }
 
       if (propsData) {
-        this.activeVertexArray(vertexArray, () => {
-          this.updateVertexArray(propsData)
-          return false
-        })
+        this.updateVertexArray(vertexArray, propsData, program)
       }
 
       return vertexArray
@@ -912,7 +970,21 @@ void main() {
     return null
   }
 
-  public updateVertexArray(propsData: Partial<WebGLVertexArrayProps>): void {
+  public updateVertexArray(propsData: WebGLVertexArrayPropsData): void
+  public updateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData, program?: WebGLProgram): void
+  public updateVertexArray(...args: any[]): void {
+    if (args.length > 1) {
+      return this.activeVertexArray(args[0], () => {
+        this.activeProgram(args[2] ?? this.program, () => {
+          this.updateVertexArray(args[1])
+          return false
+        })
+        return false
+      })
+    }
+
+    const propsData = args[0]
+
     // active vertex attrib
     if (propsData.attributes && this.program.value) {
       const programProps = this.getRelatedProps(this.program.value, 'program')
