@@ -8,11 +8,30 @@
 <canvas></canvas>
 
 <script type="module">
-  import { WebGLRenderer } from '../src'
+  import {
+    WebGLRenderer,
+    glActiveProgram,
+    glActiveTexture,
+    glActiveVertexArray,
+    glCreateBuffer, glCreateProgram,
+    glCreateTexture,
+    glCreateVertexArray,
+    glDraw, glUpdateTexture, glUpdateUniforms,
+    setCurrentGLR,
+  } from '../src'
 
   const renderer = new WebGLRenderer(document.querySelector('canvas'))
+  renderer.gl.pixelStorei(renderer.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+  renderer.gl.enable(renderer.gl.DEPTH_TEST)
+  renderer.gl.enable(renderer.gl.BLEND)
+  renderer.gl.blendFunc(renderer.gl.ONE, renderer.gl.ONE_MINUS_SRC_ALPHA)
+  renderer.gl.depthMask(false)
+  // eslint-disable-next-line no-console
+  console.log(renderer)
 
-  const program = renderer.createProgram({
+  setCurrentGLR(renderer)
+
+  const program = glCreateProgram({
     vert: `precision mediump float;
 attribute vec2 position;
 attribute vec2 uv;
@@ -37,16 +56,16 @@ void main() {
 }`,
   })
 
-  const texture1 = renderer.createTexture({
+  const texture1 = glCreateTexture({
     index: 0,
   })
 
-  const texture2 = renderer.createTexture({
+  const texture2 = glCreateTexture({
     index: 1,
     source: new ImageData(new Uint8ClampedArray([255, 0, 0, 100]), 1, 1),
   })
 
-  const buffer = renderer.createBuffer({
+  const buffer = glCreateBuffer({
     target: 'array_buffer',
     data: new Float32Array([
       // position uv textureId
@@ -63,7 +82,7 @@ void main() {
     usage: 'static_draw',
   })
 
-  const indexBuffer = renderer.createBuffer({
+  const indexBuffer = glCreateBuffer({
     target: 'element_array_buffer',
     data: new Uint16Array([
       0, 1, 2,
@@ -84,31 +103,22 @@ void main() {
     indexBuffer,
   }
 
-  renderer.gl.pixelStorei(renderer.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
-  renderer.gl.enable(renderer.gl.DEPTH_TEST)
-  renderer.gl.enable(renderer.gl.BLEND)
-  renderer.gl.blendFunc(renderer.gl.ONE, renderer.gl.ONE_MINUS_SRC_ALPHA)
-  renderer.gl.depthMask(false)
+  const vertexArray = glCreateVertexArray(vertexArrayProps, program)
 
-  const vertexArray = renderer.createVertexArray(vertexArrayProps, program)
-
-  renderer.activeProgram(program)
-  renderer.activeVertexArray(vertexArray ?? vertexArrayProps)
-  renderer.updateUniforms({
+  glActiveProgram(program)
+  glActiveVertexArray(vertexArray ?? vertexArrayProps)
+  glUpdateUniforms({
     uSamplers: new Int32Array([0, 1]),
   })
 
   const image = new Image()
   image.src = '/example.jpg'
   image.onload = () => {
-    renderer.updateTexture(texture1, { source: image })
-    renderer.activeTexture(texture1)
-    renderer.activeTexture(texture2)
-    renderer.draw()
+    glUpdateTexture(texture1, { source: image })
+    glActiveTexture(texture1)
+    glActiveTexture(texture2)
+    glDraw()
   }
-
-  // eslint-disable-next-line no-console
-  console.log(renderer)
 </script>
 </body>
 </html>

@@ -90,3 +90,68 @@ renderer.updateUniforms({
 })
 renderer.draw()
 ```
+
+## Global function style
+
+```ts
+import {
+  WebGLRenderer,
+  setCurrentGLR,
+  glCreateProgram,
+  glCreateBuffer,
+  glCreateVertexArray,
+  glActiveProgram,
+  glActiveVertexArray,
+  glUpdateUniforms,
+  glDraw,
+} from 'modern-renderer'
+
+setCurrentGLR(new WebGLRenderer(document.querySelector('canvas')))
+
+const program = glCreateProgram({
+  vert: `precision mediump float;
+attribute vec2 position;
+void main() {
+  gl_Position = vec4(position, 0, 1);
+}`,
+  frag: `precision mediump float;
+uniform vec4 color;
+void main() {
+  gl_FragColor = color;
+}`,
+})
+
+const vertexBuffer = glCreateBuffer({
+  target: 'array_buffer',
+  data: new Float32Array([
+    -1, -1, +1, -1,
+    -1, +1, +1, +1,
+  ]),
+  usage: 'static_draw',
+})
+
+const indexBuffer = glCreateBuffer({
+  target: 'element_array_buffer',
+  data: new Uint16Array([
+    0, 1, 2,
+    1, 3, 2,
+  ]),
+  usage: 'static_draw',
+})
+
+const vertexArray = {
+  attributes: {
+    position: vertexBuffer,
+  },
+  indexBuffer,
+}
+
+const vao = glCreateVertexArray(vertexArray, program)
+
+glActiveProgram(program)
+glActiveVertexArray(vao ?? vertexArray)
+glUpdateUniforms({
+  color: [0, 1, 0, 1],
+})
+glDraw()
+```

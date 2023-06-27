@@ -1,3 +1,5 @@
+import { getVarTypeSize } from './utils'
+
 type PickTargets<T> = T extends string
   ? T extends Uppercase<T>
     ? Lowercase<T>
@@ -209,39 +211,6 @@ export interface WebGLDrawProps {
   first: number
   bytesPerElement: number
   instanceCount: number
-}
-
-function getAttribSize(type: WebGLTarget): number {
-  switch (type) {
-    case 'float':
-    case 'int':
-    case 'unsigned_int':
-    case 'bool':
-    case 'sampler_2d':
-      return 1
-    case 'float_vec2':
-    case 'int_vec2':
-    case 'unsigned_int_vec2':
-    case 'bool_vec2':
-      return 2
-    case 'float_vec3':
-    case 'int_vec3':
-    case 'unsigned_int_vec3':
-    case 'bool_vec3':
-      return 3
-    case 'float_vec4':
-    case 'int_vec4':
-    case 'unsigned_int_vec4':
-    case 'bool_vec4':
-    case 'float_mat2':
-      return 4
-    case 'float_mat3':
-      return 9
-    case 'float_mat4':
-      return 16
-    default:
-      return 1
-  }
 }
 
 let UID = 0
@@ -571,7 +540,7 @@ void main() {
       props.attributes.set(attrib.name, {
         type,
         name: attrib.name,
-        size: getAttribSize(type),
+        size: getVarTypeSize(type),
         location: this.gl.getAttribLocation(program, attrib.name),
       })
     }
@@ -598,10 +567,7 @@ void main() {
     }
   }
 
-  public activeProgram(
-    program: WebGLProgram | null,
-    then?: () => void | false,
-  ): void {
+  public activeProgram(program: WebGLProgram | null, then?: () => void | false): void {
     // changed
     const oldValue = this.program.value
     const changed = {
@@ -691,10 +657,7 @@ void main() {
     }
   }
 
-  public activeFramebuffer(
-    framebuffer: WebGLFramebuffer | null,
-    then?: () => void | false,
-  ) {
+  public activeFramebuffer(framebuffer: WebGLFramebuffer | null, then?: () => void | false): void {
     // changed
     const oldValue = this.framebuffer.value
     const changed = {
@@ -926,7 +889,7 @@ void main() {
     }
   }
 
-  public activeVertexAttrib(props: WebGLVertexAttribProps, location = 0) {
+  public activeVertexAttrib(props: WebGLVertexAttribProps, location = 0): void {
     this.activeBuffer(props.buffer)
 
     this.gl.enableVertexAttribArray(location)
