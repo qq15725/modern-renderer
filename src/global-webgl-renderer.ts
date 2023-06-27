@@ -35,7 +35,7 @@ export function glCreateProgram(propsData?: WebGLProgramPropsData): WebGLProgram
 export function glUpdateProgram(propsData: WebGLProgramPropsData): void
 export function glUpdateProgram(program: WebGLProgram, propsData: WebGLProgramPropsData): void
 export function glUpdateProgram(...args: any[]): void {
-  return getCurrentGLR().updateProgram(args[0], args[1])
+  return (getCurrentGLR().updateProgram as any)(...args)
 }
 
 export function glActiveProgram(program: WebGLProgram | null, then?: () => void | false): void {
@@ -49,7 +49,7 @@ export function glCreateFramebuffer(propsData?: WebGLFramebufferPropsData): WebG
 export function glUpdateFramebuffer(propsData: WebGLFramebufferPropsData): void
 export function glUpdateFramebuffer(framebuffer: WebGLFramebuffer, propsData: WebGLFramebufferPropsData): void
 export function glUpdateFramebuffer(...args: any[]): void {
-  return getCurrentGLR().updateFramebuffer(args[0], args[1])
+  return (getCurrentGLR().updateFramebuffer as any)(...args)
 }
 
 export function glActiveFramebuffer(framebuffer: WebGLFramebuffer | null, then?: () => void | false): void {
@@ -63,7 +63,7 @@ export function glCreateTexture(propsData?: WebGLTexturePropsData): WebGLTexture
 export function glUpdateTexture(propsData: WebGLTexturePropsData): void
 export function glUpdateTexture(texture: WebGLTexture, propsData: WebGLTexturePropsData): void
 export function glUpdateTexture(...args: any[]): void {
-  return getCurrentGLR().updateTexture(args[0], args[1])
+  return (getCurrentGLR().updateTexture as any)(...args)
 }
 
 export function glActiveTexture(
@@ -84,7 +84,7 @@ export function glCreateBuffer(propsData?: WebGLBufferPropsData): WebGLBuffer {
 export function glUpdateBuffer(propsData: WebGLBufferPropsData): void
 export function glUpdateBuffer(buffer: WebGLBuffer, propsData: WebGLBufferPropsData): void
 export function glUpdateBuffer(...args: any[]): void {
-  return getCurrentGLR().updateBuffer(args[0], args[1])
+  return (getCurrentGLR().updateBuffer as any)(...args)
 }
 
 export function glActiveBuffer(
@@ -111,7 +111,7 @@ export function glCreateVertexArray(
 export function glUpdateVertexArray(propsData: WebGLVertexArrayPropsData): void
 export function glUpdateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData, program?: WebGLProgram): void
 export function glUpdateVertexArray(...args: any[]): void {
-  return getCurrentGLR().updateVertexArray(args[0], args[1], args[2])
+  return (getCurrentGLR().updateVertexArray as any)(...args)
 }
 
 export function glActiveVertexArray(
