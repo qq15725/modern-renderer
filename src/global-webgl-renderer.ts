@@ -13,9 +13,9 @@ import type {
   WebGLVertexAttribProps,
 } from './WebGLRenderer'
 
-let currentWebGLRenderer: WebGLRenderer
+let currentWebGLRenderer: WebGLRenderer | null = null
 
-export function setCurrentWebGLRenderer(renderer: WebGLRenderer) {
+export function setCurrentWebGLRenderer(renderer: WebGLRenderer | null) {
   currentWebGLRenderer = renderer
 }
 
