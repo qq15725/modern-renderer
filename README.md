@@ -22,7 +22,7 @@
 
 - All operations return WebGL native objects (no additional encapsulation)
 
-- Automatically adapted to webgl2
+- Automatically adapted to WebGL or WebGL2 (default)
 
 - Cache WebGL state to avoid unwanted GPU communication
 
