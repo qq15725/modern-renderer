@@ -13,14 +13,16 @@ import type {
   WebGLVertexAttribProps,
 } from './WebGLRenderer'
 
-let currentWebGLRenderer: WebGLRenderer | null = null
+let currentWebGLRenderer: WebGLRenderer | undefined
 
-export function setCurrentWebGLRenderer(renderer: WebGLRenderer | null) {
+export function setCurrentWebGLRenderer(renderer: WebGLRenderer | undefined) {
   currentWebGLRenderer = renderer
 }
 
-export function getCurrentWebGLRenderer(): WebGLRenderer {
-  if (!currentWebGLRenderer) throw new Error('failed to getCurrentWebGLRenderer')
+export function getCurrentWebGLRenderer(): WebGLRenderer
+export function getCurrentWebGLRenderer(orFail: false): WebGLRenderer | undefined
+export function getCurrentWebGLRenderer(orFail = true): WebGLRenderer | undefined {
+  if (orFail && !currentWebGLRenderer) throw new Error('failed to getCurrentWebGLRenderer, current WebGL Renderer not found')
   return currentWebGLRenderer
 }
 
