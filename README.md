@@ -98,7 +98,7 @@ renderer.draw()
 ```ts
 import {
   WebGLRenderer,
-  setCurrentGLR,
+  setCurrentWebGLRenderer,
   glCreateProgram,
   glCreateBuffer,
   glCreateVertexArray,
@@ -108,7 +108,7 @@ import {
   glDraw,
 } from 'modern-renderer'
 
-setCurrentGLR(new WebGLRenderer(document.querySelector('canvas')))
+setCurrentWebGLRenderer(new WebGLRenderer(document.querySelector('canvas')))
 
 const program = glCreateProgram({
   vert: `precision mediump float;
