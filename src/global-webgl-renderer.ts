@@ -103,15 +103,15 @@ export function glActiveVertexAttrib(props: WebGLVertexAttribProps, location = 0
   return getCurrentGLR().activeVertexAttrib(props, location)
 }
 
-export function glCreateVertexArray(
-  propsData?: WebGLVertexArrayPropsData,
-  program?: WebGLProgram,
-): WebGLVertexArrayObject | null {
-  return getCurrentGLR().createVertexArray(propsData, program)
+export function glCreateVertexArray(propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
+export function glCreateVertexArray(program?: WebGLProgram, propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
+export function glCreateVertexArray(...args: any[]): WebGLVertexArrayObject | null {
+  return getCurrentGLR().createVertexArray(...args)
 }
 
 export function glUpdateVertexArray(propsData: WebGLVertexArrayPropsData): void
-export function glUpdateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData, program?: WebGLProgram): void
+export function glUpdateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
+export function glUpdateVertexArray(program: WebGLProgram, vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
 export function glUpdateVertexArray(...args: any[]): void {
   return (getCurrentGLR().updateVertexArray as any)(...args)
 }

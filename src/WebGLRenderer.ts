@@ -918,10 +918,9 @@ void main() {
     }
   }
 
-  public createVertexArray(
-    propsData?: WebGLVertexArrayPropsData,
-    program?: WebGLProgram,
-  ): WebGLVertexArrayObject | null {
+  public createVertexArray(propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
+  public createVertexArray(program?: WebGLProgram, propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
+  public createVertexArray(...args: any[]): WebGLVertexArrayObject | null {
     if ('createVertexArray' in this.gl) {
       const vertexArray = this.gl.createVertexArray()
 
@@ -929,8 +928,8 @@ void main() {
         throw new Error('failed to createVertexArray')
       }
 
-      if (propsData) {
-        this.updateVertexArray(vertexArray, propsData, program)
+      if (args.length) {
+        this.updateVertexArray(args[0], vertexArray, args[1])
       }
 
       return vertexArray
@@ -940,14 +939,17 @@ void main() {
   }
 
   public updateVertexArray(propsData: WebGLVertexArrayPropsData): void
-  public updateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData, program?: WebGLProgram): void
+  public updateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
+  public updateVertexArray(program: WebGLProgram, vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
   public updateVertexArray(...args: any[]): void {
-    if (args.length > 1) {
+    if (args.length > 2) {
+      return this.activeProgram(args[0], () => {
+        this.updateVertexArray(args[1], args[2])
+        return false
+      })
+    } else if (args.length === 2) {
       return this.activeVertexArray(args[0], () => {
-        this.activeProgram(args[2] ?? this.program, () => {
-          this.updateVertexArray(args[1])
-          return false
-        })
+        this.updateVertexArray(args[1])
         return false
       })
     }

@@ -103,7 +103,7 @@ void main() {
     indexBuffer,
   }
 
-  const vertexArray = glCreateVertexArray(vertexArrayProps, program)
+  const vertexArray = glCreateVertexArray(program, vertexArrayProps)
 
   glActiveProgram(program)
   glActiveVertexArray(vertexArray ?? vertexArrayProps)

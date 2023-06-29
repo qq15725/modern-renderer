@@ -83,7 +83,7 @@ const vertexArray = {
   indexBuffer,
 }
 
-const vao = renderer.createVertexArray(vertexArray, program)
+const vao = renderer.createVertexArray(program, vertexArray)
 
 renderer.activeProgram(program)
 renderer.activeVertexArray(vao ?? vertexArray)
@@ -148,7 +148,7 @@ const vertexArray = {
   indexBuffer,
 }
 
-const vao = glCreateVertexArray(vertexArray, program)
+const vao = glCreateVertexArray(program, vertexArray)
 
 glActiveProgram(program)
 glActiveVertexArray(vao ?? vertexArray)
