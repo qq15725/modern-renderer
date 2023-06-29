@@ -123,8 +123,10 @@ export function glActiveVertexArray(
   return getCurrentGLR().activeVertexArray(vertexArray, then)
 }
 
-export function glUpdateUniforms(uniforms: Record<string, any>): void {
-  return getCurrentGLR().updateUniforms(uniforms)
+export function glUpdateUniforms(program: WebGLProgram, uniforms: Record<string, any>): void
+export function glUpdateUniforms(uniforms: Record<string, any>): void
+export function glUpdateUniforms(...args: any[]): void {
+  return (getCurrentGLR().updateUniforms as any)(...args)
 }
 
 export function glViewport(x?: number, y?: number, width?: number, height?: number) {

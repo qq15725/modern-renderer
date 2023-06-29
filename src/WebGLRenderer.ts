@@ -102,6 +102,11 @@ export interface WebGLProgramProps {
     name: string
     location: WebGLUniformLocation | null
   }>
+
+  /**
+   * Cached binding uniforms
+   */
+  bindingUniforms: WeakMap<object, any>
 }
 
 export type WebGLProgramPropsData = Partial<Omit<WebGLProgramProps, 'id' | 'attributes' | 'uniforms'>>
@@ -425,6 +430,7 @@ void main() {
 }`,
           attributes: new Map(),
           uniforms: new Map(),
+          bindingUniforms: new WeakMap(),
         } as WebGLProgramProps
         break
       case 'buffer':
@@ -1049,20 +1055,32 @@ void main() {
     }
   }
 
-  public updateUniforms(uniforms: Record<string, any>): void {
-    const program = this.program.value
+  public updateUniforms(program: WebGLProgram, uniforms: Record<string, any>): void
+  public updateUniforms(uniforms: Record<string, any>): void
+  public updateUniforms(...args: any[]): void {
+    if (args.length > 1) {
+      return this.activeProgram(args[0], () => {
+        this.updateUniforms(args[1])
+        return false
+      })
+    }
 
+    const program = this.program.value
     if (!program) return
 
     const props = this.getRelatedProps(program, 'program')
+    const uniforms = args[0]
 
     for (const key in uniforms) {
       const value = uniforms[key]
       const info = props.uniforms.get(key)
-
-      if (!info) return
-
+      if (!info) continue
       const { type, isArray, location } = info
+      if (!location) continue
+
+      const oldValue = props.bindingUniforms.get(location)
+      if (oldValue === value) continue
+      props.bindingUniforms.set(location, value)
 
       switch (type) {
         case 'float':
