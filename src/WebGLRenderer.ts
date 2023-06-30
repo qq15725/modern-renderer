@@ -291,7 +291,7 @@ export class WebGLRenderer {
       value: null,
     }
 
-  public constructor(view: HTMLCanvasElement) {
+  public constructor(view = document.createElement('canvas')) {
     let gl: any = view.getContext('webgl2')
     let version: 1 | 2 = 2
 

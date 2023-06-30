@@ -5,7 +5,6 @@
   <title>Docs</title>
 </head>
 <body>
-<canvas></canvas>
 
 <script type="module">
   import {
@@ -16,11 +15,13 @@
     glCreateBuffer, glCreateProgram,
     glCreateTexture,
     glCreateVertexArray,
-    glDraw, glUpdateTexture, glUpdateUniforms,
-    setCurrentGLR,
+    glDraw,
+    glUpdateTexture,
+    glUpdateUniforms,
+    setCurrentRenderer,
   } from '../src'
 
-  const renderer = new WebGLRenderer(document.querySelector('canvas'))
+  const renderer = new WebGLRenderer()
   renderer.gl.pixelStorei(renderer.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
   renderer.gl.enable(renderer.gl.DEPTH_TEST)
   renderer.gl.enable(renderer.gl.BLEND)
@@ -29,7 +30,9 @@
   // eslint-disable-next-line no-console
   console.log(renderer)
 
-  setCurrentGLR(renderer)
+  document.body.append(renderer.view)
+
+  setCurrentRenderer(renderer)
 
   const program = glCreateProgram({
     vert: `precision mediump float;

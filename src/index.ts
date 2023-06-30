@@ -1,2 +1,2 @@
-export * from './global-webgl-renderer'
+export * from './global'
 export * from './WebGLRenderer'
