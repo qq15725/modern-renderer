@@ -409,6 +409,7 @@ export class WebGLRenderer {
   public getRelatedProps(source: object, type: 'program'): WebGLProgramProps
   public getRelatedProps(source: object, type: 'buffer'): WebGLBufferProps
   public getRelatedProps(source: object, type: 'texture'): WebGLTextureProps
+  public getRelatedProps(source: object, type: 'vertexArray'): Map<WebGLBufferTarget, WebGLBuffer | null>
   public getRelatedProps(source: object, type: string): any {
     let props = this.relatedProps.get(source)
 
@@ -461,6 +462,9 @@ void main() {
           wrapMode: 'repeat',
           anisoLevel: 0,
         } as WebGLTextureProps
+        break
+      case 'vertexArray':
+        props = new Map()
         break
     }
 
@@ -910,7 +914,10 @@ void main() {
   }
 
   public activeVertexAttrib(props: WebGLVertexAttribProps, location = 0): void {
-    this.activeBuffer(props.buffer)
+    this.activeBuffer({
+      target: 'array_buffer',
+      value: props.buffer,
+    })
 
     this.gl.enableVertexAttribArray(location)
     this.gl.vertexAttribPointer(
@@ -944,8 +951,10 @@ void main() {
         throw new Error('failed to createVertexArray')
       }
 
-      if (args.length) {
+      if (args.length === 2) {
         this.updateVertexArray(args[0], vertexArray, args[1])
+      } else if (args.length === 1) {
+        this.updateVertexArray(vertexArray, args[0])
       }
 
       return vertexArray
@@ -964,17 +973,31 @@ void main() {
         return false
       })
     } else if (args.length === 2) {
-      return this.activeVertexArray(args[0], () => {
-        this.updateVertexArray(args[1])
-        return false
-      })
+      if (args[0]) {
+        const vertexArray = args[0]
+        this.activeVertexArray(vertexArray, () => {
+          this.updateVertexArray(args[1])
+          return false
+        })
+        const props = this.getRelatedProps(vertexArray, 'vertexArray')
+        this.buffers.forEach((value, key) => {
+          props.set(key, value)
+        })
+        this.activeBuffer({ target: 'array_buffer', value: null })
+        this.activeBuffer({ target: 'element_array_buffer', value: null })
+        return
+      } else {
+        return this.updateVertexArray(args[1])
+      }
     }
 
+    const program = this.program.value
+    if (!program) return
     const propsData = args[0]
 
     // active vertex attrib
-    if (propsData.attributes && this.program.value) {
-      const programProps = this.getRelatedProps(this.program.value, 'program')
+    if (propsData.attributes) {
+      const programProps = this.getRelatedProps(program, 'program')
       const stride: Record<number, number> = {}
       const offset: Record<number, number> = {}
       const attribs = new Map<string, WebGLVertexAttribProps & {
@@ -1039,12 +1062,10 @@ void main() {
     }
 
     // active index buffer
-    if (propsData.indexBuffer) {
-      this.activeBuffer({
-        target: 'element_array_buffer',
-        value: propsData.indexBuffer,
-      })
-    }
+    this.activeBuffer({
+      target: 'element_array_buffer',
+      value: propsData.indexBuffer ?? null,
+    })
   }
 
   public activeVertexArray(
@@ -1198,8 +1219,12 @@ void main() {
       bytesPerElement = 0,
     } = propsData
 
+    const buffers = this.vertexArrayObject.value
+      ? this.getRelatedProps(this.vertexArrayObject.value, 'vertexArray')
+      : this.buffers
+
     if (!count || !bytesPerElement) {
-      const indexBuffer = this.buffers.get('element_array_buffer')
+      const indexBuffer = buffers.get('element_array_buffer')
       if (indexBuffer) {
         const props = this.getRelatedProps(indexBuffer, 'buffer')
         if (props.data) {
@@ -1223,7 +1248,7 @@ void main() {
     }
 
     if (!count) {
-      const buffer = this.buffers.get('array_buffer')
+      const buffer = buffers.get('array_buffer')
       if (buffer) {
         const props = this.getRelatedProps(buffer, 'buffer')
         if (props.size && props.data && 'length' in props.data) {
