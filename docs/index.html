@@ -12,9 +12,11 @@
     glActiveProgram,
     glActiveTexture,
     glActiveVertexArray,
-    glCreateBuffer, glCreateProgram,
+    glCreateBuffer,
+    glCreateProgram,
     glCreateTexture,
     glCreateVertexArray,
+    glUpdateVertexArray,
     glDraw,
     glUpdateTexture,
     glUpdateUniforms,
@@ -106,7 +108,8 @@ void main() {
     indexBuffer,
   }
 
-  const vertexArray = glCreateVertexArray(program, vertexArrayProps)
+  const vertexArray = glCreateVertexArray()
+  glUpdateVertexArray(program, vertexArray, vertexArrayProps)
 
   glActiveProgram(program)
   glActiveVertexArray(vertexArray ?? vertexArrayProps)
