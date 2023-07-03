@@ -975,6 +975,7 @@ void main() {
     } else if (args.length === 2) {
       if (args[0]) {
         const vertexArray = args[0]
+        this.activeVertexArray(null)
         this.activeVertexArray(vertexArray)
         this.updateVertexArray(args[1])
         this.activeVertexArray(null)
