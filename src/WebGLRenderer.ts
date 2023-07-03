@@ -221,6 +221,7 @@ export interface WebGLDrawProps {
 let UID = 0
 
 export class WebGLRenderer {
+  public debug = false
   public view: HTMLCanvasElement
   public gl: WebGLRenderingContext | WebGL2RenderingContext
   public version: 1 | 2
@@ -337,6 +338,15 @@ export class WebGLRenderer {
       }
       if (drawBuffers) {
         polyfill.drawBuffers = (buffers: number[]) => drawBuffers.drawBuffersWEBGL(buffers)
+      }
+    }
+  }
+
+  public checkError(...args: any[]) {
+    if (this.debug) {
+      const code = this.gl.getError()
+      if (code > 0) {
+        console.warn(`gl.getError code: ${ code }`, ...args)
       }
     }
   }
@@ -636,7 +646,7 @@ void main() {
             texture,
             props.mipLevel,
           )
-
+          this.checkError('framebufferTexture2D')
           return false
         })
       }
@@ -646,6 +656,7 @@ void main() {
       this.gl.drawBuffers(
         props.colorTextures.map((_, i) => this.gl.COLOR_ATTACHMENT0 + i),
       )
+      this.checkError('drawBuffers')
     }
 
     if (props.depthTexture && (this.version > 1 || this.extensions.depthTexture)) {
@@ -727,6 +738,7 @@ void main() {
         target,
         0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, props.source,
       )
+      this.checkError('texImage2D')
     }
 
     const wrapMode = this.getBindingPoint(props.wrapMode)
@@ -857,8 +869,10 @@ void main() {
         && changed.byteLength
       ) {
         this.gl.bufferSubData(bindingTarget, 0, props.data)
+        this.checkError('bufferSubData')
       } else {
         this.gl.bufferData(bindingTarget, props.data, this.getBindingPoint(props.usage))
+        this.checkError('bufferData')
       }
     }
   }
@@ -907,11 +921,13 @@ void main() {
       props.stride ?? 0,
       props.offset ?? 0,
     )
+    this.checkError('vertexAttribPointer')
 
     // ext: instancedArrays
     if (props.divisor) {
       if ('vertexAttribDivisor' in this.gl) {
         this.gl.vertexAttribDivisor(location, props.divisor)
+        this.checkError('vertexAttribDivisor')
       } else {
         console.warn('failed to active vertex array object, GPU Instancing is not supported on this device')
       }
@@ -1223,16 +1239,20 @@ void main() {
         const type = bytesPerElement === 2 ? this.gl.UNSIGNED_SHORT : this.gl.UNSIGNED_INT
         if (instanceCount && 'drawElementsInstanced' in this.gl) {
           this.gl.drawElementsInstanced(bindingMode, count, type, first * bytesPerElement, instanceCount)
+          this.checkError('drawElementsInstanced')
         } else {
           this.gl.drawElements(bindingMode, count, type, first * bytesPerElement)
+          this.checkError('drawElements')
         }
       } else {
         console.warn('unsupported index buffer type: uint32')
       }
     } else if (instanceCount && 'drawArraysInstanced' in this.gl) {
       this.gl.drawArraysInstanced(bindingMode, first, count, instanceCount)
+      this.checkError('drawArraysInstanced')
     } else {
       this.gl.drawArrays(bindingMode, first, count)
+      this.checkError('drawArrays')
     }
   }
 
