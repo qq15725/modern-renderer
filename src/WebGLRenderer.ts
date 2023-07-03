@@ -977,14 +977,15 @@ void main() {
         const vertexArray = args[0]
         this.activeVertexArray(vertexArray, () => {
           this.updateVertexArray(args[1])
+          this.activeVertexArray(null)
+          const props = this.getRelatedProps(vertexArray, 'vertexArray')
+          this.buffers.forEach((value, key) => {
+            props.set(key, value)
+          })
+          this.activeBuffer({ target: 'array_buffer', value: null })
+          this.activeBuffer({ target: 'element_array_buffer', value: null })
           return false
         })
-        const props = this.getRelatedProps(vertexArray, 'vertexArray')
-        this.buffers.forEach((value, key) => {
-          props.set(key, value)
-        })
-        this.activeBuffer({ target: 'array_buffer', value: null })
-        this.activeBuffer({ target: 'element_array_buffer', value: null })
         return
       } else {
         return this.updateVertexArray(args[1])
