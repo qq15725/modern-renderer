@@ -254,6 +254,11 @@ export class WebGLRenderer {
   public textureUnit = 0
 
   /**
+   * Last activated texture target
+   */
+  public textureTarget: WebGLTextureTarget = 'texture_2d'
+
+  /**
    * Binding texture units
    */
   public textureUnits: Record<WebGLTextureTarget, WebGLTexture | null>[] = []
@@ -262,6 +267,11 @@ export class WebGLRenderer {
    * Binding array buffer
    */
   public arrayBuffer: WebGLBuffer | null = null
+
+  /**
+   * Last activated array buffer target
+   */
+  public arrayBufferTarget: WebGLBufferTarget = 'array_buffer'
 
   /**
    * Default vertex array (bind null)
@@ -716,15 +726,15 @@ void main() {
       return this.activeTexture({
         index: args[1].index,
         target: args[1].target,
-        value: args[0],
+        value: args[0] as WebGLTexture,
       }, () => {
-        this.updateTexture(args[1])
+        this.updateTexture(args[1] as WebGLTexturePropsData)
         return false
       })
     }
 
-    const propsData = args[0]
-    const texture = this.textureUnits[this.textureUnit]
+    const propsData = args[0] as WebGLTexturePropsData
+    const texture = this.textureUnits[this.textureUnit][propsData.target ?? this.textureTarget]
 
     if (!texture) return
 
@@ -798,10 +808,11 @@ void main() {
 
     // changed
     const oldIndex = this.textureUnit
-    let textureUnit = this.textureUnits[oldIndex]
+    let textureUnit = this.textureUnits[index]
     if (!textureUnit) {
-      this.textureUnits[oldIndex] = textureUnit = { texture_2d: null, texture_cube_map: null }
+      this.textureUnits[index] = textureUnit = { texture_2d: null, texture_cube_map: null }
     }
+    const oldTarget = this.textureTarget
     const oldValue = textureUnit[target] ?? null
     const changed = {
       index: index !== oldIndex,
@@ -813,11 +824,13 @@ void main() {
     changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + index)
     changed.texture && this.gl.bindTexture(bindingTarget, value)
     this.textureUnit = index
+    this.textureTarget = target
     textureUnit[target] = value
     if (then?.(bindingTarget) === false) {
       changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
       changed.texture && this.gl.bindTexture(bindingTarget, oldValue)
       this.textureUnit = oldIndex
+      this.textureTarget = oldTarget
       textureUnit[target] = oldValue
     }
   }
@@ -851,7 +864,7 @@ void main() {
     }
 
     const propsData = args[0] as WebGLBufferPropsData
-    const target = propsData.target ?? 'array_buffer'
+    const target = propsData.target ?? this.arrayBufferTarget
 
     const buffer = target === 'array_buffer'
       ? this.arrayBuffer
@@ -901,6 +914,7 @@ void main() {
     const target = (isObjectParams ? buffer.target : null) ?? props?.target ?? 'array_buffer'
 
     // changed
+    const oldTarget = this.arrayBufferTarget
     const oldValue = target === 'array_buffer'
       ? this.arrayBuffer
       : this.vertexArray.elementArrayBuffer
@@ -916,6 +930,7 @@ void main() {
     } else {
       this.vertexArray.elementArrayBuffer = value
     }
+    this.arrayBufferTarget = target
     if (then?.() === false) {
       changed.buffer && this.gl.bindBuffer(bindingTarget, oldValue)
       if (target === 'array_buffer') {
@@ -923,6 +938,7 @@ void main() {
       } else {
         this.vertexArray.elementArrayBuffer = oldValue
       }
+      this.arrayBufferTarget = oldTarget
     }
   }
 
