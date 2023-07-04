@@ -235,11 +235,13 @@ export class WebGLRenderer {
   public gl: WebGLRenderingContext | WebGL2RenderingContext
   public version: 1 | 2
   public extensions: WebGLExtensions
-  public bindingPoints = new Map<number, WebGLTarget>()
+  public bindPoints = new Map<number, WebGLTarget>()
   public relatedProps = new WeakMap<object, any>()
 
   /**
    * Binding framebuffer
+   *
+   * TODO blit
    */
   public framebuffer: WebGLFramebuffer | null = null
 
@@ -291,6 +293,11 @@ export class WebGLRenderer {
    */
   public vertexArrayObject: WebGLVertexArrayObject | null = null
 
+  /**
+   * Max texture image units
+   */
+  public maxTextureImageUnits: number
+
   public constructor(view = document.createElement('canvas')) {
     let gl: any = view.getContext('webgl2')
     let version: 1 | 2 = 2
@@ -313,7 +320,7 @@ export class WebGLRenderer {
       if (key === key.toUpperCase()) {
         const value = (gl as any)[key]
         if (typeof value === 'number') {
-          this.bindingPoints.set(value, key.toLowerCase() as any)
+          this.bindPoints.set(value, key.toLowerCase() as any)
         }
       }
     }
@@ -341,6 +348,7 @@ export class WebGLRenderer {
     }
 
     const maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS)
+    this.maxTextureImageUnits = maxTextures
 
     for (let i = 0; i < maxTextures; i++) {
       this.textureUnits[i] = { texture_2d: null, texture_cube_map: null }
@@ -406,7 +414,7 @@ export class WebGLRenderer {
    *
    * @param target
    */
-  public getBindingPoint(target: WebGLTarget): number {
+  public getBindPoint(target: WebGLTarget): number {
     return (this.gl as any)[target.toUpperCase()] as number
   }
 
@@ -483,7 +491,7 @@ void main() {
   }
 
   public createShader(source: string, type: 'vertex_shader' | 'fragment_shader'): WebGLShader {
-    const shader = this.gl.createShader(this.getBindingPoint(type))
+    const shader = this.gl.createShader(this.getBindPoint(type))
 
     if (!shader) {
       throw new Error('failed to createShader')
@@ -565,7 +573,7 @@ void main() {
 
       if (!attrib || attrib.name.startsWith('gl_')) continue
 
-      const type = this.bindingPoints.get(attrib.type) ?? String(attrib.type) as any
+      const type = this.bindPoints.get(attrib.type) ?? String(attrib.type) as any
 
       props.attributes.set(attrib.name, {
         type,
@@ -589,7 +597,7 @@ void main() {
       props.uniforms.set(name, {
         name,
         index: i,
-        type: this.bindingPoints.get(uniform.type) ?? String(uniform.type) as any,
+        type: this.bindPoints.get(uniform.type) ?? String(uniform.type) as any,
         size: uniform.size,
         isArray: name !== uniform.name,
         location: this.gl.getUniformLocation(program, name),
@@ -747,7 +755,7 @@ void main() {
       ;(props as any)[key] = value
     }
 
-    const target = this.getBindingPoint(props.target)
+    const target = this.getBindPoint(props.target)
 
     if (changed.source && props.source) {
       this.gl.texImage2D(
@@ -757,13 +765,13 @@ void main() {
       this.checkError('texImage2D')
     }
 
-    const wrapMode = this.getBindingPoint(props.wrapMode)
+    const wrapMode = this.getBindPoint(props.wrapMode)
     this.gl.texParameteri(target, this.gl.TEXTURE_WRAP_S, wrapMode)
     this.gl.texParameteri(target, this.gl.TEXTURE_WRAP_T, wrapMode)
 
-    const filterMode = this.getBindingPoint(props.filterMode.split('_')[0] as any)
+    const filterMode = this.getBindPoint(props.filterMode.split('_')[0] as any)
     if (props.filterMode.includes('_')) {
-      this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, this.getBindingPoint(props.filterMode))
+      this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, this.getBindPoint(props.filterMode))
     } else {
       this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, filterMode)
     }
@@ -820,7 +828,7 @@ void main() {
     }
 
     // active and bind
-    const bindingTarget = this.getBindingPoint(target)
+    const bindingTarget = this.getBindPoint(target)
     changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + index)
     changed.texture && this.gl.bindTexture(bindingTarget, value)
     this.textureUnit = index
@@ -883,7 +891,7 @@ void main() {
       ;(props as any)[key] = value
     }
 
-    const bindingTarget = this.getBindingPoint(props.target)
+    const bindingTarget = this.getBindPoint(props.target)
 
     if (changed.data) {
       if (
@@ -894,7 +902,7 @@ void main() {
         this.gl.bufferSubData(bindingTarget, 0, props.data)
         this.checkError('bufferSubData')
       } else {
-        this.gl.bufferData(bindingTarget, props.data, this.getBindingPoint(props.usage))
+        this.gl.bufferData(bindingTarget, props.data, this.getBindPoint(props.usage))
         this.checkError('bufferData')
       }
     }
@@ -923,7 +931,7 @@ void main() {
     }
 
     // bind
-    const bindingTarget = this.getBindingPoint(target)
+    const bindingTarget = this.getBindPoint(target)
     changed.buffer && this.gl.bindBuffer(bindingTarget, value)
     if (target === 'array_buffer') {
       this.arrayBuffer = value
@@ -952,7 +960,7 @@ void main() {
     this.gl.vertexAttribPointer(
       location,
       props.size ?? 0,
-      this.getBindingPoint(props.type ?? 'float'),
+      this.getBindPoint(props.type ?? 'float'),
       props.normalized ?? false,
       props.stride ?? 0,
       props.offset ?? 0,
@@ -1292,7 +1300,7 @@ void main() {
       }
     }
 
-    const bindingMode = this.getBindingPoint(mode)
+    const bindingMode = this.getBindPoint(mode)
 
     if (bytesPerElement) {
       if (bytesPerElement === 2 || (bytesPerElement === 4 && Boolean(this.extensions.uint32ElementIndex))) {
