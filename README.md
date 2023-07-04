@@ -67,7 +67,7 @@ const vertexBuffer = renderer.createBuffer({
   usage: 'static_draw',
 })
 
-const indexBuffer = renderer.createBuffer({
+const elementArrayBuffer = renderer.createBuffer({
   target: 'element_array_buffer',
   data: new Uint16Array([
     0, 1, 2,
@@ -80,7 +80,7 @@ const vertexArray = {
   attributes: {
     position: vertexBuffer,
   },
-  indexBuffer,
+  elementArrayBuffer,
 }
 
 const vao = renderer.createVertexArray(program, vertexArray)
@@ -132,7 +132,7 @@ const vertexBuffer = glCreateBuffer({
   usage: 'static_draw',
 })
 
-const indexBuffer = glCreateBuffer({
+const elementArrayBuffer = glCreateBuffer({
   target: 'element_array_buffer',
   data: new Uint16Array([
     0, 1, 2,
@@ -145,7 +145,7 @@ const vertexArray = {
   attributes: {
     position: vertexBuffer,
   },
-  indexBuffer,
+  elementArrayBuffer,
 }
 
 const vao = glCreateVertexArray(program, vertexArray)

@@ -87,7 +87,7 @@ void main() {
     usage: 'static_draw',
   })
 
-  const indexBuffer = glCreateBuffer({
+  const elementArrayBuffer = glCreateBuffer({
     target: 'element_array_buffer',
     data: new Uint16Array([
       0, 1, 2,
@@ -105,7 +105,7 @@ void main() {
       // color: { buffer, size: 4, normalized: true, type: 'unsigned_byte' },
       textureId: { buffer, size: 1, normalized: true, type: 'float' },
     },
-    indexBuffer,
+    elementArrayBuffer,
   }
 
   const vertexArray = glCreateVertexArray()
