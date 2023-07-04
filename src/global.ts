@@ -94,8 +94,8 @@ export function glActiveBuffer(
   activeRenderer?.activeBuffer(buffer, then)
 }
 
-export function glActiveVertexAttrib(props: WebGLVertexAttribProps, location = 0): void {
-  activeRenderer?.activeVertexAttrib(props, location)
+export function glActiveVertexAttrib(key: string, props: WebGLVertexAttribProps, location = 0): void {
+  activeRenderer?.activeVertexAttrib(key, props, location)
 }
 
 export function glCreateVertexArray(propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
