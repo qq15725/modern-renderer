@@ -808,23 +808,29 @@ void main() {
     then?: (target: number) => void | false,
   ): void {
     // normalization params
-    const isObjectParams = texture && 'value' in texture
-    const value = isObjectParams ? texture.value : texture
-    const props = value ? this.getRelatedProps(value, 'texture') : null
-    const target = (isObjectParams ? texture.target : null) ?? props?.target ?? 'texture_2d'
-    const index = (isObjectParams ? texture.index : null) ?? props?.index ?? 0
+    let value, target, index
+    if (texture && 'value' in texture) {
+      ({ target, value, index } = texture)
+    } else {
+      value = texture
+    }
+    if (target === undefined || index === undefined) {
+      const props = value ? this.getRelatedProps(value, 'texture') : undefined
+      target = target ?? props?.target ?? 'texture_2d'
+      index = index ?? props?.index ?? 0
+    }
 
     // changed
-    const oldIndex = this.textureUnit
     let textureUnit = this.textureUnits[index]
     if (!textureUnit) {
       this.textureUnits[index] = textureUnit = { texture_2d: null, texture_cube_map: null }
     }
-    const oldTarget = this.textureTarget
     const oldValue = textureUnit[target] ?? null
+    const oldIndex = this.textureUnit
+    const oldTarget = this.textureTarget
     const changed = {
-      index: index !== oldIndex,
       texture: value !== oldValue,
+      index: index !== oldIndex,
     }
 
     // active and bind
@@ -916,10 +922,16 @@ void main() {
     then?: () => void | false,
   ): void {
     // normalization params
-    const isObjectParams = buffer && 'value' in buffer
-    const value = isObjectParams ? buffer.value : buffer
-    const props = value ? this.getRelatedProps(value, 'buffer') : null
-    const target = (isObjectParams ? buffer.target : null) ?? props?.target ?? 'array_buffer'
+    let target, value
+    if (buffer && 'value' in buffer) {
+      ({ target, value } = buffer)
+    } else {
+      value = buffer
+    }
+    if (target === undefined) {
+      const props = value ? this.getRelatedProps(value, 'buffer') : null
+      target = target ?? props?.target ?? 'array_buffer'
+    }
 
     // changed
     const oldTarget = this.arrayBufferTarget
@@ -1048,11 +1060,13 @@ void main() {
         const attrib = propsData.attributes[key]
 
         // normalization params
-        const isObjectParams = 'buffer' in attrib
-        const buffer = isObjectParams ? attrib.buffer : attrib
-        let bufferProps = this.getRelatedProps(buffer, 'buffer')
-        if (isObjectParams) {
-          bufferProps = { ...bufferProps, ...attrib }
+        let buffer, bufferProps
+        if ('buffer' in attrib) {
+          buffer = attrib.buffer
+          bufferProps = { ...this.getRelatedProps(buffer, 'buffer'), ...attrib }
+        } else {
+          buffer = attrib
+          bufferProps = this.getRelatedProps(buffer, 'buffer')
         }
 
         stride[bufferProps.id] = stride[bufferProps.id] ?? 0
@@ -1069,11 +1083,9 @@ void main() {
         )
         stride[bufferProps.id] += byteLength
         attribs.set(key, {
-          id: bufferProps.id,
+          ...bufferProps,
           buffer,
           size,
-          stride: bufferProps?.stride,
-          offset: bufferProps?.offset,
           location: attributeInfo?.location,
           byteLength,
         })
