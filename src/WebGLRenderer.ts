@@ -899,7 +899,7 @@ void main() {
 
     const bindingTarget = this.getBindPoint(props.target)
 
-    if (changed.data) {
+    if (changed.data || changed.usage || changed.byteLength) {
       if (
         props.data
         && !changed.usage
