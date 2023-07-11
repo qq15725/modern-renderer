@@ -113,6 +113,10 @@ export type WebGLTextureIndex = number
 
 export type WebGLTextureTarget = 'texture_2d' | 'texture_cube_map'
 
+export type WebGLTextureFilterMode = 'linear' | 'nearest' | 'nearest_mipmap_nearest' | 'linear_mipmap_nearest' | 'nearest_mipmap_linear' | 'linear_mipmap_linear'
+
+export type WebGLTextureWrapMode = 'repeat' | 'clamp_to_edge' | 'mirrored_repeat'
+
 export interface WebGLTextureProps {
   /**
    * ID
@@ -135,14 +139,24 @@ export interface WebGLTextureProps {
   source: TexImageSource | null
 
   /**
+   * Texture width
+   */
+  width: number | null
+
+  /**
+   * Texture height
+   */
+  height: number | null
+
+  /**
    * Filtering mode of the Texture.
    */
-  filterMode: 'linear' | 'nearest' | 'nearest_mipmap_nearest' | 'linear_mipmap_nearest' | 'nearest_mipmap_linear' | 'linear_mipmap_linear'
+  filterMode: WebGLTextureFilterMode
 
   /**
    * Texture coordinate wrapping mode.
    */
-  wrapMode: 'repeat' | 'clamp_to_edge' | 'mirrored_repeat'
+  wrapMode: WebGLTextureWrapMode
 
   /**
    * Defines the anisotropic filtering level of the Texture.
@@ -230,7 +244,6 @@ export interface WebGLDrawProps {
 let UID = 0
 
 export class WebGLRenderer {
-  public debug = false
   public view: HTMLCanvasElement
   public gl: WebGLRenderingContext | WebGL2RenderingContext
   public version: 1 | 2
@@ -355,15 +368,6 @@ export class WebGLRenderer {
     }
   }
 
-  public checkError(...args: any[]) {
-    if (this.debug) {
-      const code = this.gl.getError()
-      if (code > 0) {
-        console.warn(`gl.getError code: ${ code }`, ...args)
-      }
-    }
-  }
-
   protected getExtensions(): WebGLExtensions {
     const gl = this.gl
 
@@ -471,6 +475,8 @@ void main() {
           target: 'texture_2d',
           index: 0,
           source: null,
+          width: null,
+          height: null,
           filterMode: 'linear',
           wrapMode: 'repeat',
           anisoLevel: 0,
@@ -669,7 +675,6 @@ void main() {
             texture,
             props.mipLevel,
           )
-          this.checkError('framebufferTexture2D')
           return false
         })
       }
@@ -679,7 +684,6 @@ void main() {
       this.gl.drawBuffers(
         props.colorTextures.map((_, i) => this.gl.COLOR_ATTACHMENT0 + i),
       )
-      this.checkError('drawBuffers')
     }
 
     if (props.depthTexture && (this.version > 1 || this.extensions.depthTexture)) {
@@ -757,12 +761,12 @@ void main() {
 
     const target = this.getBindPoint(props.target)
 
-    if (changed.source && props.source) {
-      this.gl.texImage2D(
-        target,
-        0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, props.source,
-      )
-      this.checkError('texImage2D')
+    if (changed.source || changed.width || changed.height) {
+      if (props.source) {
+        this.gl.texImage2D(target, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, props.source)
+      } else if (props.width && props.height) {
+        this.gl.texImage2D(target, 0, this.gl.RGBA, props.width, props.height, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, null)
+      }
     }
 
     const wrapMode = this.getBindPoint(props.wrapMode)
@@ -906,10 +910,8 @@ void main() {
         && changed.byteLength
       ) {
         this.gl.bufferSubData(bindingTarget, 0, props.data)
-        this.checkError('bufferSubData')
       } else {
         this.gl.bufferData(bindingTarget, props.data, this.getBindPoint(props.usage))
-        this.checkError('bufferData')
       }
     }
   }
@@ -977,13 +979,11 @@ void main() {
       props.stride ?? 0,
       props.offset ?? 0,
     )
-    this.checkError('vertexAttribPointer')
 
     // ext: instancedArrays
     if (props.divisor) {
       if ('vertexAttribDivisor' in this.gl) {
         this.gl.vertexAttribDivisor(location, props.divisor)
-        this.checkError('vertexAttribDivisor')
       } else {
         console.warn('failed to active vertex array object, GPU Instancing is not supported on this device')
       }
@@ -991,7 +991,13 @@ void main() {
 
     this.vertexArray.attributes[key] = {
       enable: true,
-      ...props,
+      buffer: props.buffer,
+      size: props.size,
+      type: props.type,
+      normalized: props.normalized,
+      stride: props.stride,
+      offset: props.offset,
+      divisor: props.divisor,
     }
   }
 
@@ -1319,20 +1325,16 @@ void main() {
         const type = bytesPerElement === 2 ? this.gl.UNSIGNED_SHORT : this.gl.UNSIGNED_INT
         if (instanceCount && 'drawElementsInstanced' in this.gl) {
           this.gl.drawElementsInstanced(bindingMode, count, type, first * bytesPerElement, instanceCount)
-          this.checkError('drawElementsInstanced')
         } else {
           this.gl.drawElements(bindingMode, count, type, first * bytesPerElement)
-          this.checkError('drawElements')
         }
       } else {
         console.warn('unsupported index buffer type: uint32')
       }
     } else if (instanceCount && 'drawArraysInstanced' in this.gl) {
       this.gl.drawArraysInstanced(bindingMode, first, count, instanceCount)
-      this.checkError('drawArraysInstanced')
     } else {
       this.gl.drawArrays(bindingMode, first, count)
-      this.checkError('drawArrays')
     }
   }
 
