@@ -128,11 +128,19 @@ export function glViewport(x?: number, y?: number, width?: number, height?: numb
   activeRenderer?.viewport(x, y, width, height)
 }
 
-export function glClear(r?: number, g?: number, b?: number, a?: number, mask?: number): void {
-  activeRenderer?.clear(r, g, b, a, mask)
+export function glClear(mask?: number): void {
+  activeRenderer?.clear(mask)
 }
 
 export function glDraw(propsData: Partial<WebGLDrawProps> = {}): void {
   activeRenderer?.draw(propsData)
+}
+
+export function glReset(): void {
+  activeRenderer?.reset()
+}
+
+export function glSetSize(width: number, height: number): void {
+  activeRenderer?.setSize(width, height)
 }
 

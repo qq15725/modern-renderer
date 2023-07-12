@@ -244,54 +244,54 @@ export interface WebGLDrawProps {
 let UID = 0
 
 export class WebGLRenderer {
-  public view: HTMLCanvasElement
-  public gl: WebGLRenderingContext | WebGL2RenderingContext
-  public version: 1 | 2
-  public extensions: WebGLExtensions
-  public bindPoints = new Map<number, WebGLTarget>()
-  public relatedProps = new WeakMap<object, any>()
+  view: HTMLCanvasElement
+  gl: WebGLRenderingContext | WebGL2RenderingContext
+  version: 1 | 2
+  extensions: WebGLExtensions
+  bindPoints = new Map<number, WebGLTarget>()
+  relatedProps = new WeakMap<object, any>()
 
   /**
    * Binding framebuffer
    *
    * TODO blit
    */
-  public framebuffer: WebGLFramebuffer | null = null
+  framebuffer: WebGLFramebuffer | null = null
 
   /**
    * Binding program
    */
-  public program: WebGLProgram | null = null
+  program: WebGLProgram | null = null
 
   /**
    * Active texture unit
    */
-  public textureUnit = 0
+  textureUnit = 0
 
   /**
    * Last activated texture target
    */
-  public textureTarget: WebGLTextureTarget = 'texture_2d'
+  textureTarget: WebGLTextureTarget = 'texture_2d'
 
   /**
    * Binding texture units
    */
-  public textureUnits: Record<WebGLTextureTarget, WebGLTexture | null>[] = []
+  textureUnits: Record<WebGLTextureTarget, WebGLTexture | null>[] = []
 
   /**
    * Binding array buffer
    */
-  public arrayBuffer: WebGLBuffer | null = null
+  arrayBuffer: WebGLBuffer | null = null
 
   /**
    * Last activated array buffer target
    */
-  public arrayBufferTarget: WebGLBufferTarget = 'array_buffer'
+  arrayBufferTarget: WebGLBufferTarget = 'array_buffer'
 
   /**
    * Default vertex array (bind null)
    */
-  public vertexArrayNull: WebGLVertexArrayProps = {
+  vertexArrayNull: WebGLVertexArrayProps = {
     attributes: {},
     elementArrayBuffer: null,
   }
@@ -299,19 +299,19 @@ export class WebGLRenderer {
   /**
    * Binding vertex array
    */
-  public vertexArray: WebGLVertexArrayProps = this.vertexArrayNull
+  vertexArray: WebGLVertexArrayProps = this.vertexArrayNull
 
   /**
    * Binding vertex array object
    */
-  public vertexArrayObject: WebGLVertexArrayObject | null = null
+  vertexArrayObject: WebGLVertexArrayObject | null = null
 
   /**
    * Max texture image units
    */
-  public maxTextureImageUnits: number
+  maxTextureImageUnits: number
 
-  public constructor(view = document.createElement('canvas')) {
+  constructor(view = document.createElement('canvas')) {
     let gl: any = view.getContext('webgl2')
     let version: 1 | 2 = 2
 
@@ -418,16 +418,16 @@ export class WebGLRenderer {
    *
    * @param target
    */
-  public getBindPoint(target: WebGLTarget): number {
+  getBindPoint(target: WebGLTarget): number {
     return (this.gl as any)[target.toUpperCase()] as number
   }
 
-  public getRelatedProps(source: object, type: 'framebuffer'): WebGLFramebufferProps
-  public getRelatedProps(source: object, type: 'program'): WebGLProgramProps
-  public getRelatedProps(source: object, type: 'buffer'): WebGLBufferProps
-  public getRelatedProps(source: object, type: 'texture'): WebGLTextureProps
-  public getRelatedProps(source: object, type: 'vertexArray'): WebGLVertexArrayProps
-  public getRelatedProps(source: object, type: string): any {
+  getRelatedProps(source: object, type: 'framebuffer'): WebGLFramebufferProps
+  getRelatedProps(source: object, type: 'program'): WebGLProgramProps
+  getRelatedProps(source: object, type: 'buffer'): WebGLBufferProps
+  getRelatedProps(source: object, type: 'texture'): WebGLTextureProps
+  getRelatedProps(source: object, type: 'vertexArray'): WebGLVertexArrayProps
+  getRelatedProps(source: object, type: string): any {
     let props = this.relatedProps.get(source)
 
     if (props) {
@@ -496,7 +496,7 @@ void main() {
     return props
   }
 
-  public createShader(source: string, type: 'vertex_shader' | 'fragment_shader'): WebGLShader {
+  createShader(source: string, type: 'vertex_shader' | 'fragment_shader'): WebGLShader {
     const shader = this.gl.createShader(this.getBindPoint(type))
 
     if (!shader) {
@@ -513,7 +513,7 @@ void main() {
     return shader
   }
 
-  public createProgram(propsData?: WebGLProgramPropsData): WebGLProgram {
+  createProgram(propsData?: WebGLProgramPropsData): WebGLProgram {
     const program = this.gl.createProgram()
     ;(program as any).id = ++UID
 
@@ -528,9 +528,9 @@ void main() {
     return program
   }
 
-  public updateProgram(propsData: WebGLProgramPropsData): void
-  public updateProgram(program: WebGLProgram, propsData: WebGLProgramPropsData): void
-  public updateProgram(...args: any[]): void {
+  updateProgram(propsData: WebGLProgramPropsData): void
+  updateProgram(program: WebGLProgram, propsData: WebGLProgramPropsData): void
+  updateProgram(...args: any[]): void {
     if (args.length > 1) {
       const oldValue = this.program
       this.program = args[0]
@@ -611,7 +611,7 @@ void main() {
     }
   }
 
-  public activeProgram(program: WebGLProgram | null, then?: () => void | false): void {
+  activeProgram(program: WebGLProgram | null, then?: () => void | false): void {
     // changed
     const oldValue = this.program
     const changed = {
@@ -627,7 +627,7 @@ void main() {
     }
   }
 
-  public createFramebuffer(propsData?: WebGLFramebufferPropsData): WebGLFramebuffer {
+  createFramebuffer(propsData?: WebGLFramebufferPropsData): WebGLFramebuffer {
     const framebuffer = this.gl.createFramebuffer()
     ;(framebuffer as any).id = ++UID
 
@@ -642,9 +642,9 @@ void main() {
     return framebuffer
   }
 
-  public updateFramebuffer(propsData: WebGLFramebufferPropsData): void
-  public updateFramebuffer(framebuffer: WebGLFramebuffer, propsData: WebGLFramebufferPropsData): void
-  public updateFramebuffer(...args: any[]): void {
+  updateFramebuffer(propsData: WebGLFramebufferPropsData): void
+  updateFramebuffer(framebuffer: WebGLFramebuffer, propsData: WebGLFramebufferPropsData): void
+  updateFramebuffer(...args: any[]): void {
     if (args.length > 1) {
       return this.activeFramebuffer(args[0], () => {
         this.updateFramebuffer(args[1])
@@ -701,7 +701,7 @@ void main() {
     }
   }
 
-  public activeFramebuffer(framebuffer: WebGLFramebuffer | null, then?: () => void | false): void {
+  activeFramebuffer(framebuffer: WebGLFramebuffer | null, then?: () => void | false): void {
     // changed
     const oldValue = this.framebuffer
     const changed = {
@@ -716,7 +716,7 @@ void main() {
     }
   }
 
-  public createTexture(propsData?: WebGLTexturePropsData): WebGLTexture {
+  createTexture(propsData?: WebGLTexturePropsData): WebGLTexture {
     const texture = this.gl.createTexture()
     ;(texture as any).id = ++UID
 
@@ -731,9 +731,9 @@ void main() {
     return texture
   }
 
-  public updateTexture(propsData: WebGLTexturePropsData): void
-  public updateTexture(texture: WebGLTexture, propsData: WebGLTexturePropsData): void
-  public updateTexture(...args: any[]): void {
+  updateTexture(propsData: WebGLTexturePropsData): void
+  updateTexture(texture: WebGLTexture, propsData: WebGLTexturePropsData): void
+  updateTexture(...args: any[]): void {
     if (args.length > 1) {
       return this.activeTexture({
         index: args[1].index,
@@ -803,7 +803,7 @@ void main() {
     }
   }
 
-  public activeTexture(
+  activeTexture(
     texture: WebGLTexture | null | {
       index?: WebGLTextureIndex
       target?: WebGLTextureTarget
@@ -839,21 +839,25 @@ void main() {
 
     // active and bind
     const bindingTarget = this.getBindPoint(target)
-    changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + index)
-    changed.texture && this.gl.bindTexture(bindingTarget, value)
+    if (changed.texture) {
+      changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + index)
+      this.gl.bindTexture(bindingTarget, value)
+    }
     this.textureUnit = index
     this.textureTarget = target
     textureUnit[target] = value
     if (then?.(bindingTarget) === false) {
-      changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
-      changed.texture && this.gl.bindTexture(bindingTarget, oldValue)
+      if (changed.texture) {
+        changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
+        this.gl.bindTexture(bindingTarget, oldValue)
+      }
       this.textureUnit = oldIndex
       this.textureTarget = oldTarget
       textureUnit[target] = oldValue
     }
   }
 
-  public createBuffer(propsData?: WebGLBufferPropsData): WebGLBuffer {
+  createBuffer(propsData?: WebGLBufferPropsData): WebGLBuffer {
     const buffer = this.gl.createBuffer()
     ;(buffer as any).id = ++UID
 
@@ -868,9 +872,9 @@ void main() {
     return buffer
   }
 
-  public updateBuffer(propsData: WebGLBufferPropsData): void
-  public updateBuffer(buffer: WebGLBuffer, propsData: WebGLBufferPropsData): void
-  public updateBuffer(...args: any[]): void {
+  updateBuffer(propsData: WebGLBufferPropsData): void
+  updateBuffer(buffer: WebGLBuffer, propsData: WebGLBufferPropsData): void
+  updateBuffer(...args: any[]): void {
     if (args.length > 1) {
       return this.activeBuffer({
         target: args[1].target,
@@ -916,7 +920,7 @@ void main() {
     }
   }
 
-  public activeBuffer(
+  activeBuffer(
     buffer: WebGLBuffer | null | {
       target?: WebGLBufferTarget
       value: WebGLBuffer | null
@@ -964,7 +968,7 @@ void main() {
     }
   }
 
-  public activeVertexAttrib(key: string, props: WebGLVertexAttribProps, location = 0): void {
+  activeVertexAttrib(key: string, props: WebGLVertexAttribProps, location = 0): void {
     this.activeBuffer({
       target: 'array_buffer',
       value: props.buffer,
@@ -1001,9 +1005,9 @@ void main() {
     }
   }
 
-  public createVertexArray(propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
-  public createVertexArray(program?: WebGLProgram, propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
-  public createVertexArray(...args: any[]): WebGLVertexArrayObject | null {
+  createVertexArray(propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
+  createVertexArray(program?: WebGLProgram, propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
+  createVertexArray(...args: any[]): WebGLVertexArrayObject | null {
     if ('createVertexArray' in this.gl) {
       const vertexArray = this.gl.createVertexArray()
       ;(vertexArray as any).id = ++UID
@@ -1024,10 +1028,10 @@ void main() {
     return null
   }
 
-  public updateVertexArray(propsData: WebGLVertexArrayPropsData): void
-  public updateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
-  public updateVertexArray(program: WebGLProgram, vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
-  public updateVertexArray(...args: any[]): void {
+  updateVertexArray(propsData: WebGLVertexArrayPropsData): void
+  updateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
+  updateVertexArray(program: WebGLProgram, vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
+  updateVertexArray(...args: any[]): void {
     if (args.length > 2) {
       return this.activeProgram(args[0], () => {
         this.updateVertexArray(args[1], args[2])
@@ -1126,7 +1130,7 @@ void main() {
     this.vertexArray.elementArrayBuffer = propsData.elementArrayBuffer ?? null
   }
 
-  public activeVertexArray(
+  activeVertexArray(
     vertexArrayObject: WebGLVertexArrayObject | null | WebGLVertexArrayPropsData,
     then?: () => void | false,
   ): void {
@@ -1159,9 +1163,9 @@ void main() {
     }
   }
 
-  public updateUniforms(program: WebGLProgram, uniforms: Record<string, any>): void
-  public updateUniforms(uniforms: Record<string, any>): void
-  public updateUniforms(...args: any[]): void {
+  updateUniforms(program: WebGLProgram, uniforms: Record<string, any>): void
+  updateUniforms(uniforms: Record<string, any>): void
+  updateUniforms(...args: any[]): void {
     if (args.length > 1) {
       return this.activeProgram(args[0], () => {
         this.updateUniforms(args[1])
@@ -1255,7 +1259,7 @@ void main() {
     }
   }
 
-  public viewport(
+  viewport(
     x = 0,
     y = 0,
     width = this.gl.drawingBufferWidth,
@@ -1264,15 +1268,13 @@ void main() {
     this.gl.viewport(x, y, width, height)
   }
 
-  public clear(
-    r = 0, g = 0, b = 0, a = 0,
+  clear(
     mask = this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT,
   ) {
-    this.gl.clearColor(r, g, b, a)
     this.gl.clear(mask)
   }
 
-  public draw(propsData: Partial<WebGLDrawProps> = {}) {
+  draw(propsData: Partial<WebGLDrawProps> = {}) {
     const {
       mode = 'triangles',
       first = 0,
@@ -1338,13 +1340,13 @@ void main() {
     }
   }
 
-  public destroy() {
+  destroy() {
     this.view.removeEventListener('webglcontextlost', this.onContextLost as any)
     this.view.removeEventListener('webglcontextrestored', this.onContextRestored as any)
     this.extensions.loseContext?.loseContext()
   }
 
-  public toPixels(): Uint8ClampedArray {
+  toPixels(): Uint8ClampedArray {
     const width = this.gl.drawingBufferWidth
     const height = this.gl.drawingBufferHeight
     const length = width * height * 4
@@ -1365,5 +1367,28 @@ void main() {
       pixels.set(flipedPixels.subarray(i, i + row), end - i)
     }
     return pixels
+  }
+
+  reset() {
+    this.framebuffer = null
+    this.program = null
+    this.textureUnit = 0
+    this.textureTarget = 'texture_2d'
+    this.textureUnits = this.textureUnits.map(() => ({ texture_2d: null, texture_cube_map: null }))
+    this.arrayBuffer = null
+    this.arrayBufferTarget = 'array_buffer'
+    this.vertexArrayNull = {
+      attributes: {},
+      elementArrayBuffer: null,
+    }
+    this.vertexArray = this.vertexArrayNull
+    this.vertexArrayObject = null
+  }
+
+  setSize(width: number, height: number) {
+    this.view.width = width
+    this.view.height = height
+    this.viewport(0, 0, width, height)
+    this.reset()
   }
 }
