@@ -1091,6 +1091,9 @@ void main() {
         const vertexArrayObject = args[0] as WebGLVertexArrayObject
         this.activeVertexArray(vertexArrayObject)
         this.updateVertexArray(args[1] as WebGLVertexArrayPropsData)
+        const props = this.getRelatedProps(vertexArrayObject, 'vertexArray')
+        props.attributes = this.vertexArray.attributes
+        props.elementArrayBuffer = this.vertexArray.elementArrayBuffer
         this.activeVertexArray(null)
         this.activeBuffer({ target: 'array_buffer', value: null })
         return
@@ -1186,7 +1189,7 @@ void main() {
     if (vertexArrayObject && 'attributes' in vertexArrayObject) {
       this.updateVertexArray(vertexArrayObject)
       then?.()
-    } else {
+    } else if ('bindVertexArray' in this.gl) {
       // changed
       const oldValue = this.vertexArrayObject
       const oldVertexArray = this.vertexArray
@@ -1194,24 +1197,22 @@ void main() {
         value: vertexArrayObject !== oldValue,
       }
 
-      if ('bindVertexArray' in this.gl) {
-        // bind vertex array
-        if (changed.value) {
-          this.gl.bindVertexArray(vertexArrayObject)
-          this.vertexArrayObject = vertexArrayObject
-          if (vertexArrayObject) {
-            this.vertexArray = this.getRelatedProps(vertexArrayObject, 'vertexArray')
-          } else {
-            this.vertexArray = this.vertexArrayNull
-          }
+      // bind vertex array
+      if (changed.value) {
+        this.gl.bindVertexArray(vertexArrayObject)
+        this.vertexArrayObject = vertexArrayObject
+        if (vertexArrayObject) {
+          this.vertexArray = { ...this.getRelatedProps(vertexArrayObject, 'vertexArray') }
+        } else {
+          this.vertexArray = this.vertexArrayNull
         }
+      }
 
-        // rollback change
-        if (then?.() === false && changed.value) {
-          this.gl.bindVertexArray(oldValue)
-          this.vertexArrayObject = oldValue
-          this.vertexArray = oldVertexArray
-        }
+      // rollback change
+      if (then?.() === false && changed.value) {
+        this.gl.bindVertexArray(oldValue)
+        this.vertexArrayObject = oldValue
+        this.vertexArray = oldVertexArray
       }
     }
   }
