@@ -1,3 +1,12 @@
+## [0.2.14](https://github.com/qq15725/modern-renderer/compare/v0.2.13...v0.2.14) (2023-07-13)
+
+
+### Bug Fixes
+
+* rollback texture change ([5dacfbd](https://github.com/qq15725/modern-renderer/commit/5dacfbd4757a823f94d676e8de8092ca49e36e4f))
+
+
+
 ## [0.2.13](https://github.com/qq15725/modern-renderer/compare/v0.2.12...v0.2.13) (2023-07-13)
 
 
