@@ -885,13 +885,13 @@ void main() {
 
     // rollback change
     if (then?.(glTarget) === false) {
-      if (changed.index) {
-        this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
-        this.textureUnit = oldIndex
-      }
       if (changed.texture) {
         this.gl.bindTexture(glTarget, oldValue)
         textureUnit[target] = oldValue
+      }
+      if (changed.index) {
+        this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
+        this.textureUnit = oldIndex
       }
       this.textureTarget = oldTarget
     }
