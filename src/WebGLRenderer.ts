@@ -1067,18 +1067,9 @@ void main() {
       }
 
       if (args.length === 2) {
-        this.activeVertexArray(vertexArray, () => {
-          this.activeProgram(args[0], () => {
-            this.updateVertexArray(args[1])
-            return false
-          })
-          return false
-        })
+        this.updateVertexArray(args[0], vertexArray, args[1])
       } else if (args.length === 1) {
-        this.activeVertexArray(vertexArray, () => {
-          this.updateVertexArray(args[0])
-          return false
-        })
+        this.updateVertexArray(vertexArray, args[0])
       }
 
       return vertexArray
