@@ -623,9 +623,11 @@ void main() {
       value: oldValue !== program,
     }
 
-    // use
+    // use program
     changed.value && this.gl.useProgram(program)
     this.program = program
+
+    // rollback change
     if (then?.() === false) {
       changed.value && this.gl.useProgram(oldValue)
       this.program = oldValue
@@ -651,10 +653,9 @@ void main() {
   updateFramebuffer(framebuffer: WebGLFramebuffer, propsData: WebGLFramebufferPropsData): void
   updateFramebuffer(...args: any[]): void {
     if (args.length > 1) {
-      return this.activeFramebuffer(args[0], () => {
-        this.updateFramebuffer(args[1])
-        return false
-      })
+      this.activeFramebuffer(args[0])
+      this.updateFramebuffer(args[1])
+      return
     }
 
     const propsData = args[0]
@@ -672,16 +673,20 @@ void main() {
       for (let len = props.colorTextures.length, i = 0; i < len; i++) {
         const texture = props.colorTextures[i]
 
-        this.activeTexture(texture, target => {
-          this.gl.framebufferTexture2D(
-            this.gl.FRAMEBUFFER,
-            this.gl.COLOR_ATTACHMENT0 + i,
-            target,
-            texture,
-            props.mipLevel,
-          )
-          return false
+        this.activeTexture({
+          index: 0,
+          target: 'texture_2d',
+          value: texture,
+          forceIndex: true,
         })
+
+        this.gl.framebufferTexture2D(
+          this.gl.FRAMEBUFFER,
+          this.gl.COLOR_ATTACHMENT0 + i,
+          this.gl.TEXTURE_2D,
+          texture,
+          props.mipLevel,
+        )
       }
     }
 
@@ -692,17 +697,20 @@ void main() {
     }
 
     if (props.depthTexture && (this.version > 1 || this.extensions.depthTexture)) {
-      this.activeTexture(props.depthTexture, target => {
-        this.gl.framebufferTexture2D(
-          this.gl.FRAMEBUFFER,
-          this.gl.DEPTH_ATTACHMENT,
-          target,
-          props.depthTexture,
-          props.mipLevel,
-        )
-
-        return false
+      this.activeTexture({
+        index: 0,
+        target: 'texture_2d',
+        value: props.depthTexture,
+        forceIndex: true,
       })
+
+      this.gl.framebufferTexture2D(
+        this.gl.FRAMEBUFFER,
+        this.gl.DEPTH_ATTACHMENT,
+        this.gl.TEXTURE_2D,
+        props.depthTexture,
+        props.mipLevel,
+      )
     }
   }
 
@@ -713,8 +721,11 @@ void main() {
       value: oldValue !== framebuffer,
     }
 
+    // bind framebuffer
     changed.value && this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer)
     this.framebuffer = framebuffer
+
+    // rollback change
     if (then?.() === false) {
       changed.value && this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, oldValue)
       this.framebuffer = oldValue
@@ -740,14 +751,15 @@ void main() {
   updateTexture(texture: WebGLTexture, propsData: WebGLTexturePropsData): void
   updateTexture(...args: any[]): void {
     if (args.length > 1) {
-      return this.activeTexture({
+      this.activeTexture({
         index: args[1].index,
         target: args[1].target,
         value: args[0] as WebGLTexture,
-      }, () => {
-        this.updateTexture(args[1] as WebGLTexturePropsData)
-        return false
+        forceIndex: true,
       })
+
+      this.updateTexture(args[1] as WebGLTexturePropsData)
+      return
     }
 
     const propsData = args[0] as WebGLTexturePropsData
@@ -812,14 +824,15 @@ void main() {
     texture: WebGLTexture | null | {
       index?: WebGLTextureIndex
       target?: WebGLTextureTarget
+      forceIndex?: boolean
       value: WebGLTexture | null
     },
     then?: (target: number) => void | false,
   ): void {
     // normalization params
-    let value, target, index
+    let value, target, index, forceIndex
     if (texture && 'value' in texture) {
-      ({ target, value, index } = texture)
+      ({ target, value, index, forceIndex } = texture)
     } else {
       value = texture
     }
@@ -829,33 +842,34 @@ void main() {
       index = index ?? props?.index ?? 0
     }
 
-    // changed
+    // get or init texture unit
     let textureUnit = this.textureUnits[index]
     if (!textureUnit) {
       this.textureUnits[index] = textureUnit = { texture_2d: null, texture_cube_map: null }
     }
+
+    // changed
     const oldValue = textureUnit[target] ?? null
     const oldIndex = this.textureUnit
     const oldTarget = this.textureTarget
+    const changedTexture = value !== oldValue
     const changed = {
-      texture: value !== oldValue,
-      index: index !== oldIndex,
+      index: index !== oldIndex && (changedTexture || forceIndex),
+      texture: changedTexture,
     }
 
     // active and bind
-    const bindingTarget = this.getBindPoint(target)
-    if (changed.texture) {
-      changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + index)
-      this.gl.bindTexture(bindingTarget, value)
-    }
+    const glTarget = this.getBindPoint(target)
+    changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + index)
+    changed.texture && this.gl.bindTexture(glTarget, value)
     this.textureUnit = index
     this.textureTarget = target
     textureUnit[target] = value
-    if (then?.(bindingTarget) === false) {
-      if (changed.texture) {
-        changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
-        this.gl.bindTexture(bindingTarget, oldValue)
-      }
+
+    // rollback change
+    if (then?.(glTarget) === false) {
+      changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
+      changed.texture && this.gl.bindTexture(glTarget, oldValue)
       this.textureUnit = oldIndex
       this.textureTarget = oldTarget
       textureUnit[target] = oldValue
@@ -881,13 +895,12 @@ void main() {
   updateBuffer(buffer: WebGLBuffer, propsData: WebGLBufferPropsData): void
   updateBuffer(...args: any[]): void {
     if (args.length > 1) {
-      return this.activeBuffer({
+      this.activeBuffer({
         target: args[1].target,
         value: args[0],
-      }, () => {
-        this.updateBuffer(args[1])
-        return false
       })
+      this.updateBuffer(args[1])
+      return
     }
 
     const propsData = args[0] as WebGLBufferPropsData
@@ -953,17 +966,19 @@ void main() {
       buffer: value !== oldValue,
     }
 
-    // bind
-    const bindingTarget = this.getBindPoint(target)
-    changed.buffer && this.gl.bindBuffer(bindingTarget, value)
+    // bind buffer
+    const glTarget = this.getBindPoint(target)
+    changed.buffer && this.gl.bindBuffer(glTarget, value)
     if (target === 'array_buffer') {
       this.arrayBuffer = value
     } else {
       this.vertexArray.elementArrayBuffer = value
     }
     this.arrayBufferTarget = target
+
+    // rollback change
     if (then?.() === false) {
-      changed.buffer && this.gl.bindBuffer(bindingTarget, oldValue)
+      changed.buffer && this.gl.bindBuffer(glTarget, oldValue)
       if (target === 'array_buffer') {
         this.arrayBuffer = oldValue
       } else {
@@ -1038,10 +1053,9 @@ void main() {
   updateVertexArray(program: WebGLProgram, vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
   updateVertexArray(...args: any[]): void {
     if (args.length > 2) {
-      return this.activeProgram(args[0], () => {
-        this.updateVertexArray(args[1], args[2])
-        return false
-      })
+      this.activeProgram(args[0])
+      this.updateVertexArray(args[1], args[2])
+      return
     } else if (args.length === 2) {
       if (args[0]) {
         const vertexArrayObject = args[0] as WebGLVertexArrayObject
@@ -1150,8 +1164,8 @@ void main() {
         value: vertexArrayObject !== oldValue,
       }
 
-      // bind
       if ('bindVertexArray' in this.gl) {
+        // bind vertex array
         changed.value && this.gl.bindVertexArray(vertexArrayObject)
         this.vertexArrayObject = vertexArrayObject
         if (vertexArrayObject) {
@@ -1159,6 +1173,8 @@ void main() {
         } else {
           this.vertexArray = this.vertexArrayNull
         }
+
+        // rollback change
         if (then?.() === false) {
           changed.value && this.gl.bindVertexArray(oldValue)
           this.vertexArrayObject = oldValue
@@ -1172,10 +1188,9 @@ void main() {
   updateUniforms(uniforms: Record<string, any>): void
   updateUniforms(...args: any[]): void {
     if (args.length > 1) {
-      return this.activeProgram(args[0], () => {
-        this.updateUniforms(args[1])
-        return false
-      })
+      this.activeProgram(args[0])
+      this.updateUniforms(args[1])
+      return
     }
 
     const program = this.program
@@ -1264,12 +1279,7 @@ void main() {
     }
   }
 
-  viewport(
-    x = 0,
-    y = 0,
-    width = this.gl.drawingBufferWidth,
-    height = this.gl.drawingBufferHeight,
-  ) {
+  viewport(x = 0, y = 0, width = this.gl.drawingBufferWidth, height = this.gl.drawingBufferHeight) {
     this.gl.viewport(x, y, width, height)
   }
 
@@ -1359,15 +1369,7 @@ void main() {
     const end = (height - 1) * row
     const flipedPixels = new Uint8Array(length)
     const pixels = new Uint8ClampedArray(length)
-    this.gl.readPixels(
-      0,
-      0,
-      width,
-      height,
-      this.gl.RGBA,
-      this.gl.UNSIGNED_BYTE,
-      flipedPixels,
-    )
+    this.gl.readPixels(0, 0, width, height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, flipedPixels)
     for (let i = 0; i < length; i += row) {
       pixels.set(flipedPixels.subarray(i, i + row), end - i)
     }

@@ -67,6 +67,7 @@ export function glActiveTexture(
   texture: WebGLTexture | null | {
     index?: WebGLTextureIndex
     target?: WebGLTextureTarget
+    forceIndex?: boolean
     value: WebGLTexture | null
   },
   then?: (target: number) => void | false,
