@@ -33,3 +33,14 @@ export function getVarTypeSize(type: string): number {
       return 1
   }
 }
+
+/**
+ * Set meta data for debug
+ *
+ * @param object
+ * @param data
+ */
+export function setMetadata(object: object, data: Record<string, any>) {
+  // https://github.com/BabylonJS/Spector.js/#custom-data
+  (object as any).__SPECTOR_Metadata = data
+}

@@ -439,10 +439,12 @@ export class WebGLRenderer {
       return props
     }
 
+    const id = (source as any)?.__SPECTOR_Object_TAG?.id ?? ++UID
+
     switch (type) {
       case 'framebuffer':
         props = {
-          id: (source as any).id ?? ++UID,
+          id,
           colorTextures: [],
           depthTexture: null,
           stencilTexture: null,
@@ -451,7 +453,7 @@ export class WebGLRenderer {
         break
       case 'program':
         props = {
-          id: (source as any).id ?? ++UID,
+          id,
           vert: `precision mediump float;
 attribute vec2 position;
 void main() {
@@ -468,7 +470,7 @@ void main() {
         break
       case 'buffer':
         props = {
-          id: (source as any).id ?? ++UID,
+          id,
           target: 'array_buffer',
           data: null,
           usage: 'static_draw',
@@ -476,7 +478,7 @@ void main() {
         break
       case 'texture':
         props = {
-          id: (source as any).id ?? ++UID,
+          id,
           target: 'texture_2d',
           index: 0,
           source: null,
@@ -489,7 +491,7 @@ void main() {
         break
       case 'vertexArray':
         props = {
-          id: (source as any).id ?? ++UID,
+          id,
           attributes: {},
           elementArrayBuffer: null,
         } as WebGLVertexArrayProps
@@ -520,7 +522,6 @@ void main() {
 
   createProgram(propsData?: WebGLProgramPropsData): WebGLProgram {
     const program = this.gl.createProgram()
-    ;(program as any).id = ++UID
 
     if (!program) {
       throw new Error('failed to createProgram')
@@ -638,7 +639,6 @@ void main() {
 
   createFramebuffer(propsData?: WebGLFramebufferPropsData): WebGLFramebuffer {
     const framebuffer = this.gl.createFramebuffer()
-    ;(framebuffer as any).id = ++UID
 
     if (!framebuffer) {
       throw new Error('failed to createFramebuffer')
@@ -740,7 +740,6 @@ void main() {
 
   createTexture(propsData?: WebGLTexturePropsData): WebGLTexture {
     const texture = this.gl.createTexture()
-    ;(texture as any).id = ++UID
 
     if (!texture) {
       throw new Error('failed to createTexture')
@@ -900,7 +899,6 @@ void main() {
 
   createBuffer(propsData?: WebGLBufferPropsData): WebGLBuffer {
     const buffer = this.gl.createBuffer()
-    ;(buffer as any).id = ++UID
 
     if (!buffer) {
       throw new Error('failed to createBuffer')
@@ -933,7 +931,6 @@ void main() {
 
     const propsData = args[0] as WebGLBufferPropsData
     const target = propsData.target ?? this.arrayBufferTarget
-
     const buffer = target === 'array_buffer'
       ? this.arrayBuffer
       : this.vertexArray.elementArrayBuffer
@@ -1060,7 +1057,6 @@ void main() {
   createVertexArray(...args: any[]): WebGLVertexArrayObject | null {
     if ('createVertexArray' in this.gl) {
       const vertexArray = this.gl.createVertexArray()
-      ;(vertexArray as any).id = ++UID
 
       if (!vertexArray) {
         throw new Error('failed to createVertexArray')
