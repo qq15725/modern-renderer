@@ -624,12 +624,14 @@ void main() {
     }
 
     // use program
-    changed.value && this.gl.useProgram(program)
-    this.program = program
+    if (changed.value) {
+      this.gl.useProgram(program)
+      this.program = program
+    }
 
     // rollback change
-    if (then?.() === false) {
-      changed.value && this.gl.useProgram(oldValue)
+    if (then?.() === false && changed.value) {
+      this.gl.useProgram(oldValue)
       this.program = oldValue
     }
   }
@@ -643,7 +645,10 @@ void main() {
     }
 
     if (propsData) {
-      this.updateFramebuffer(framebuffer, propsData)
+      this.activeFramebuffer(framebuffer, () => {
+        this.updateFramebuffer(propsData)
+        return false
+      })
     }
 
     return framebuffer
@@ -654,8 +659,7 @@ void main() {
   updateFramebuffer(...args: any[]): void {
     if (args.length > 1) {
       this.activeFramebuffer(args[0])
-      this.updateFramebuffer(args[1])
-      return
+      return this.updateFramebuffer(args[1])
     }
 
     const propsData = args[0]
@@ -722,12 +726,14 @@ void main() {
     }
 
     // bind framebuffer
-    changed.value && this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer)
-    this.framebuffer = framebuffer
+    if (changed.value) {
+      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer)
+      this.framebuffer = framebuffer
+    }
 
     // rollback change
-    if (then?.() === false) {
-      changed.value && this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, oldValue)
+    if (then?.() === false && changed.value) {
+      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, oldValue)
       this.framebuffer = oldValue
     }
   }
@@ -741,7 +747,15 @@ void main() {
     }
 
     if (propsData) {
-      this.updateTexture(texture, propsData)
+      this.activeTexture({
+        index: propsData.index,
+        target: propsData.target,
+        value: texture,
+        forceIndex: true,
+      }, () => {
+        this.updateTexture(propsData)
+        return false
+      })
     }
 
     return texture
@@ -860,19 +874,27 @@ void main() {
 
     // active and bind
     const glTarget = this.getBindPoint(target)
-    changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + index)
-    changed.texture && this.gl.bindTexture(glTarget, value)
-    this.textureUnit = index
+    if (changed.index) {
+      this.gl.activeTexture(this.gl.TEXTURE0 + index)
+      this.textureUnit = index
+    }
+    if (changed.texture) {
+      this.gl.bindTexture(glTarget, value)
+      textureUnit[target] = value
+    }
     this.textureTarget = target
-    textureUnit[target] = value
 
     // rollback change
     if (then?.(glTarget) === false) {
-      changed.index && this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
-      changed.texture && this.gl.bindTexture(glTarget, oldValue)
-      this.textureUnit = oldIndex
+      if (changed.index) {
+        this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
+        this.textureUnit = oldIndex
+      }
+      if (changed.texture) {
+        this.gl.bindTexture(glTarget, oldValue)
+        textureUnit[target] = oldValue
+      }
       this.textureTarget = oldTarget
-      textureUnit[target] = oldValue
     }
   }
 
@@ -885,7 +907,13 @@ void main() {
     }
 
     if (propsData) {
-      this.updateBuffer(buffer, propsData)
+      this.activeBuffer({
+        target: propsData.target,
+        value: buffer,
+      }, () => {
+        this.updateBuffer(propsData)
+        return false
+      })
     }
 
     return buffer
@@ -968,17 +996,19 @@ void main() {
 
     // bind buffer
     const glTarget = this.getBindPoint(target)
-    changed.buffer && this.gl.bindBuffer(glTarget, value)
-    if (target === 'array_buffer') {
-      this.arrayBuffer = value
-    } else {
-      this.vertexArray.elementArrayBuffer = value
+    if (changed.buffer) {
+      this.gl.bindBuffer(glTarget, value)
+      if (target === 'array_buffer') {
+        this.arrayBuffer = value
+      } else {
+        this.vertexArray.elementArrayBuffer = value
+      }
+      this.arrayBufferTarget = target
     }
-    this.arrayBufferTarget = target
 
     // rollback change
-    if (then?.() === false) {
-      changed.buffer && this.gl.bindBuffer(glTarget, oldValue)
+    if (then?.() === false && changed.buffer) {
+      this.gl.bindBuffer(glTarget, oldValue)
       if (target === 'array_buffer') {
         this.arrayBuffer = oldValue
       } else {
@@ -1037,9 +1067,18 @@ void main() {
       }
 
       if (args.length === 2) {
-        this.updateVertexArray(args[0], vertexArray, args[1])
+        this.activeVertexArray(vertexArray, () => {
+          this.activeProgram(args[0], () => {
+            this.updateVertexArray(args[1])
+            return false
+          })
+          return false
+        })
       } else if (args.length === 1) {
-        this.updateVertexArray(vertexArray, args[0])
+        this.activeVertexArray(vertexArray, () => {
+          this.updateVertexArray(args[0])
+          return false
+        })
       }
 
       return vertexArray
@@ -1166,17 +1205,19 @@ void main() {
 
       if ('bindVertexArray' in this.gl) {
         // bind vertex array
-        changed.value && this.gl.bindVertexArray(vertexArrayObject)
-        this.vertexArrayObject = vertexArrayObject
-        if (vertexArrayObject) {
-          this.vertexArray = this.getRelatedProps(vertexArrayObject, 'vertexArray')
-        } else {
-          this.vertexArray = this.vertexArrayNull
+        if (changed.value) {
+          this.gl.bindVertexArray(vertexArrayObject)
+          this.vertexArrayObject = vertexArrayObject
+          if (vertexArrayObject) {
+            this.vertexArray = this.getRelatedProps(vertexArrayObject, 'vertexArray')
+          } else {
+            this.vertexArray = this.vertexArrayNull
+          }
         }
 
         // rollback change
-        if (then?.() === false) {
-          changed.value && this.gl.bindVertexArray(oldValue)
+        if (then?.() === false && changed.value) {
+          this.gl.bindVertexArray(oldValue)
           this.vertexArrayObject = oldValue
           this.vertexArray = oldVertexArray
         }
