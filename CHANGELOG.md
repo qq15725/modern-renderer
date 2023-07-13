@@ -1,3 +1,12 @@
+## [0.2.12](https://github.com/qq15725/modern-renderer/compare/v0.2.11...v0.2.12) (2023-07-13)
+
+
+### Bug Fixes
+
+* updateVertexArray ([9c23973](https://github.com/qq15725/modern-renderer/commit/9c23973c822b67e041e0f91645b52045e664744b))
+
+
+
 ## [0.2.11](https://github.com/qq15725/modern-renderer/compare/v0.2.10...v0.2.11) (2023-07-13)
 
 
