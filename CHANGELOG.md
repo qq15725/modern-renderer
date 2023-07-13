@@ -1,3 +1,12 @@
+## [0.2.10](https://github.com/qq15725/modern-renderer/compare/v0.2.9...v0.2.10) (2023-07-13)
+
+
+### Bug Fixes
+
+* create WebGL native object ([be9e20d](https://github.com/qq15725/modern-renderer/commit/be9e20da26b64b70f20b7cb1e8f6573866c95a71))
+
+
+
 ## [0.2.9](https://github.com/qq15725/modern-renderer/compare/v0.2.8...v0.2.9) (2023-07-13)
 
 
