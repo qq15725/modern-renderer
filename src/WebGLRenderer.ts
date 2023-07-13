@@ -1390,7 +1390,7 @@ void main() {
     this.vertexArrayObject = null
   }
 
-  resize(width: number, height: number) {
+  resize(width: number, height: number, updateCss = true) {
     const resolution = this.resolution
     const viewWidth = Math.round(width * resolution)
     const viewHeight = Math.round(height * resolution)
@@ -1400,7 +1400,9 @@ void main() {
     this.view.height = viewHeight
     this.screen.width = screenWidth
     this.screen.height = screenHeight
-    this.view.style.width = `${ screenWidth }px`
-    this.view.style.height = `${ screenHeight }px`
+    if (updateCss) {
+      this.view.style.width = `${ screenWidth }px`
+      this.view.style.height = `${ screenHeight }px`
+    }
   }
 }

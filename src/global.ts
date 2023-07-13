@@ -140,7 +140,7 @@ export function glReset(): void {
   activeRenderer?.reset()
 }
 
-export function glResize(width: number, height: number): void {
-  activeRenderer?.resize(width, height)
+export function glResize(width: number, height: number, updateCss = true): void {
+  activeRenderer?.resize(width, height, updateCss)
 }
 
