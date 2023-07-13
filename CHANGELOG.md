@@ -1,3 +1,12 @@
+## [0.2.13](https://github.com/qq15725/modern-renderer/compare/v0.2.12...v0.2.13) (2023-07-13)
+
+
+### Features
+
+* add setMetadata util method for debug ([1948917](https://github.com/qq15725/modern-renderer/commit/19489177114e5e88f33e32ce7e5011352778c8af))
+
+
+
 ## [0.2.12](https://github.com/qq15725/modern-renderer/compare/v0.2.11...v0.2.12) (2023-07-13)
 
 
