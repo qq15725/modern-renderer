@@ -1,4 +1,4 @@
-import { getVarTypeSize } from './utils'
+import { DEVICE_PIXEL_RATIO, getVarTypeSize } from './utils'
 
 type PickTargets<T> = T extends string
   ? T extends Uppercase<T>
@@ -244,12 +244,14 @@ export interface WebGLDrawProps {
 let UID = 0
 
 export class WebGLRenderer {
+  readonly screen = { x: 0, y: 0, width: 0, height: 0 }
+  resolution = DEVICE_PIXEL_RATIO
   view: HTMLCanvasElement
   gl: WebGLRenderingContext | WebGL2RenderingContext
   version: 1 | 2
   extensions: WebGLExtensions
-  bindPoints = new Map<number, WebGLTarget>()
-  relatedProps = new WeakMap<object, any>()
+  readonly bindPoints = new Map<number, WebGLTarget>()
+  readonly relatedProps = new WeakMap<object, any>()
 
   /**
    * Binding framebuffer
@@ -311,12 +313,15 @@ export class WebGLRenderer {
    */
   maxTextureImageUnits: number
 
-  constructor(view = document.createElement('canvas')) {
-    let gl: any = view.getContext('webgl2')
+  constructor(
+    view = document.createElement('canvas'),
+    options?: WebGLContextAttributes,
+  ) {
+    let gl: any = view.getContext('webgl2', options)
     let version: 1 | 2 = 2
 
     if (!gl) {
-      gl = view.getContext('webgl')
+      gl = view.getContext('webgl', options)
       version = 1
     }
 
@@ -1385,10 +1390,17 @@ void main() {
     this.vertexArrayObject = null
   }
 
-  setSize(width: number, height: number) {
-    this.view.width = width
-    this.view.height = height
-    this.viewport(0, 0, width, height)
-    this.reset()
+  resize(width: number, height: number) {
+    const resolution = this.resolution
+    const viewWidth = Math.round(width * resolution)
+    const viewHeight = Math.round(height * resolution)
+    const screenWidth = viewWidth / resolution
+    const screenHeight = viewHeight / resolution
+    this.view.width = viewWidth
+    this.view.height = viewHeight
+    this.screen.width = screenWidth
+    this.screen.height = screenHeight
+    this.view.style.width = `${ screenWidth }px`
+    this.view.style.height = `${ screenHeight }px`
   }
 }

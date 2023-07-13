@@ -1,3 +1,6 @@
+export const IN_BROWSER = typeof window !== 'undefined'
+export const DEVICE_PIXEL_RATIO = IN_BROWSER ? window.devicePixelRatio || 1 : 1
+
 export function getVarTypeSize(type: string): number {
   switch (type) {
     case 'float':
