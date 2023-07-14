@@ -8,7 +8,14 @@ export const isCanvasElement = (node: unknown): node is HTMLCanvasElement => nod
   && (node as any).tagName === 'CANVAS'
 
 export const isWebgl2 = (gl: unknown): gl is WebGL2RenderingContext => SUPPORT_WEBGL2
-  && gl instanceof WebGL2RenderingContext
+  && gl instanceof globalThis.WebGL2RenderingContext
+
+export function createHTMLCanvas(): HTMLCanvasElement | undefined {
+  if (IN_BROWSER) {
+    return globalThis.document.createElement('canvas')
+  }
+  return undefined
+}
 
 export function getVarTypeSize(type: string): number {
   switch (type) {

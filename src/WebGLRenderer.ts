@@ -1,4 +1,4 @@
-import { DEVICE_PIXEL_RATIO, getVarTypeSize, isCanvasElement, isWebgl2 } from './utils'
+import { DEVICE_PIXEL_RATIO, createHTMLCanvas, getVarTypeSize, isCanvasElement, isWebgl2 } from './utils'
 
 type PickTargets<T> = T extends string
   ? T extends Uppercase<T>
@@ -336,7 +336,7 @@ export class WebGLRenderer {
   constructor(view?: HTMLCanvasElement, options?: WebGLContextAttributes)
   constructor(...args: any[]) {
     if (args[0] === undefined || isCanvasElement(args[0])) {
-      this.setupContext(args[0] ?? document.createElement('canvas'), args[1])
+      this.setupContext(args[0] ?? createHTMLCanvas(), args[1])
     } else {
       this.gl = args[0]
       if (isWebgl2(this.gl)) {
