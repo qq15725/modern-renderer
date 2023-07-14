@@ -1,4 +1,4 @@
-import { DEVICE_PIXEL_RATIO, getVarTypeSize } from './utils'
+import { DEVICE_PIXEL_RATIO, getVarTypeSize, isCanvasElement, isWebgl2 } from './utils'
 
 type PickTargets<T> = T extends string
   ? T extends Uppercase<T>
@@ -244,12 +244,35 @@ export interface WebGLDrawProps {
 let UID = 0
 
 export class WebGLRenderer {
+  /**
+   * Screen rect
+   */
   readonly screen = { x: 0, y: 0, width: 0, height: 0 }
+
+  /**
+   * Device pixel ratio
+   */
   resolution = DEVICE_PIXEL_RATIO
-  view: HTMLCanvasElement
-  gl: WebGLRenderingContext | WebGL2RenderingContext
-  version: 1 | 2
-  extensions: WebGLExtensions
+
+  /**
+   * Canvas
+   */
+  view?: HTMLCanvasElement
+
+  /**
+   * WebGL context
+   */
+  gl!: WebGLRenderingContext | WebGL2RenderingContext
+
+  /**
+   * WebGL version
+   */
+  version: 1 | 2 = 1
+
+  /**
+   * Extensions
+   */
+  extensions!: WebGLExtensions
   readonly bindPoints = new Map<number, WebGLTarget>()
   readonly relatedProps = new WeakMap<object, any>()
 
@@ -311,12 +334,36 @@ export class WebGLRenderer {
   /**
    * Max texture image units
    */
-  maxTextureImageUnits: number
+  maxTextureImageUnits!: number
 
-  constructor(
-    view = document.createElement('canvas'),
-    options?: WebGLContextAttributes,
-  ) {
+  constructor(gl: WebGLRenderingContext | WebGL2RenderingContext)
+  constructor(view?: HTMLCanvasElement, options?: WebGLContextAttributes)
+  constructor(...args: any[]) {
+    if (args[0] === undefined || isCanvasElement(args[0])) {
+      this.setupContext(args[0] ?? document.createElement('canvas'), args[1])
+    } else {
+      this.gl = args[0]
+      if (isWebgl2(this.gl)) {
+        this.version = 2
+      }
+    }
+
+    this
+      .setupBindPoints()
+      .setupExtensions()
+      .setupPolyfill()
+      .setupTextureUnits()
+  }
+
+  /**
+   * Setup WebGL context
+   *
+   * @param view
+   * @param options
+   * @protected
+   */
+  protected setupContext(view: HTMLCanvasElement, options?: WebGLContextAttributes): this {
+    this.view = view
     let gl: any = view.getContext('webgl2', options)
     let version: 1 | 2 = 2
 
@@ -329,51 +376,21 @@ export class WebGLRenderer {
       throw new Error('failed to getContext')
     }
 
-    this.view = view
     this.gl = gl
     this.version = version
-    this.extensions = this.getExtensions()
-
-    for (const key in gl) {
-      if (key === key.toUpperCase()) {
-        const value = (gl as any)[key]
-        if (typeof value === 'number') {
-          this.bindPoints.set(value, key.toLowerCase() as any)
-        }
-      }
-    }
 
     view.addEventListener('webglcontextlost', this.onContextLost as any, false)
     view.addEventListener('webglcontextrestored', this.onContextRestored as any, false)
 
-    // polyfill
-    if (version === 1) {
-      const { instancedArrays, vertexArrayObject, drawBuffers } = this.extensions
-      const polyfill = gl as WebGL2RenderingContext
-      if (vertexArrayObject) {
-        polyfill.createVertexArray = () => vertexArrayObject.createVertexArrayOES()
-        polyfill.bindVertexArray = vao => vertexArrayObject.bindVertexArrayOES(vao)
-        polyfill.deleteVertexArray = vao => vertexArrayObject.deleteVertexArrayOES(vao)
-      }
-      if (instancedArrays) {
-        polyfill.vertexAttribDivisor = (a, b) => instancedArrays.vertexAttribDivisorANGLE(a, b)
-        polyfill.drawElementsInstanced = (a, b, c, d, e) => instancedArrays.drawElementsInstancedANGLE(a, b, c, d, e)
-        polyfill.drawArraysInstanced = (a, b, c, d) => instancedArrays.drawArraysInstancedANGLE(a, b, c, d)
-      }
-      if (drawBuffers) {
-        polyfill.drawBuffers = (buffers: number[]) => drawBuffers.drawBuffersWEBGL(buffers)
-      }
-    }
-
-    const maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS)
-    this.maxTextureImageUnits = maxTextures
-
-    for (let i = 0; i < maxTextures; i++) {
-      this.textureUnits[i] = { texture_2d: null, texture_cube_map: null }
-    }
+    return this
   }
 
-  protected getExtensions(): WebGLExtensions {
+  /**
+   * Setup extensions
+   *
+   * @protected
+   */
+  protected setupExtensions(): this {
     const gl = this.gl
 
     const extensions: Record<string, any> = {
@@ -406,7 +423,67 @@ export class WebGLRenderer {
       extensions.colorBufferFloat = gl.getExtension('EXT_color_buffer_float')
     }
 
-    return extensions
+    this.extensions = extensions
+
+    return this
+  }
+
+  /**
+   * Setup bind points
+   *
+   * @protected
+   */
+  protected setupBindPoints(): this {
+    for (const key in this.gl) {
+      if (key === key.toUpperCase()) {
+        const value = (this.gl as any)[key]
+        if (typeof value === 'number') {
+          this.bindPoints.set(value, key.toLowerCase() as any)
+        }
+      }
+    }
+    return this
+  }
+
+  /**
+   * Setup polyfill
+   *
+   * @protected
+   */
+  protected setupPolyfill(): this {
+    if (this.version === 1) {
+      const { instancedArrays, vertexArrayObject, drawBuffers } = this.extensions
+      const polyfill = this.gl as WebGL2RenderingContext
+      if (vertexArrayObject) {
+        polyfill.createVertexArray = () => vertexArrayObject.createVertexArrayOES()
+        polyfill.bindVertexArray = vao => vertexArrayObject.bindVertexArrayOES(vao)
+        polyfill.deleteVertexArray = vao => vertexArrayObject.deleteVertexArrayOES(vao)
+      }
+      if (instancedArrays) {
+        polyfill.vertexAttribDivisor = (a, b) => instancedArrays.vertexAttribDivisorANGLE(a, b)
+        polyfill.drawElementsInstanced = (a, b, c, d, e) => instancedArrays.drawElementsInstancedANGLE(a, b, c, d, e)
+        polyfill.drawArraysInstanced = (a, b, c, d) => instancedArrays.drawArraysInstancedANGLE(a, b, c, d)
+      }
+      if (drawBuffers) {
+        polyfill.drawBuffers = (buffers: number[]) => drawBuffers.drawBuffersWEBGL(buffers)
+      }
+    }
+    return this
+  }
+
+  /**
+   * Setup texture units
+   *
+   * @protected
+   */
+  protected setupTextureUnits(): this {
+    const maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS)
+    this.maxTextureImageUnits = maxTextures
+
+    for (let i = 0; i < maxTextures; i++) {
+      this.textureUnits[i] = { texture_2d: null, texture_cube_map: null }
+    }
+    return this
   }
 
   protected onContextLost(event: WebGLContextEvent) {
@@ -1385,8 +1462,8 @@ void main() {
   }
 
   destroy() {
-    this.view.removeEventListener('webglcontextlost', this.onContextLost as any)
-    this.view.removeEventListener('webglcontextrestored', this.onContextRestored as any)
+    this.view?.removeEventListener('webglcontextlost', this.onContextLost as any)
+    this.view?.removeEventListener('webglcontextrestored', this.onContextRestored as any)
     this.extensions.loseContext?.loseContext()
   }
 
@@ -1427,11 +1504,13 @@ void main() {
     const viewHeight = Math.round(height * resolution)
     const screenWidth = viewWidth / resolution
     const screenHeight = viewHeight / resolution
-    this.view.width = viewWidth
-    this.view.height = viewHeight
+    if (this.view) {
+      this.view.width = viewWidth
+      this.view.height = viewHeight
+    }
     this.screen.width = screenWidth
     this.screen.height = screenHeight
-    if (updateCss) {
+    if (updateCss && this.view) {
       this.view.style.width = `${ screenWidth }px`
       this.view.style.height = `${ screenHeight }px`
     }

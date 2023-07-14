@@ -1,5 +1,14 @@
 export const IN_BROWSER = typeof window !== 'undefined'
 export const DEVICE_PIXEL_RATIO = IN_BROWSER ? window.devicePixelRatio || 1 : 1
+export const SUPPORT_WEBGL2 = 'WebGL2RenderingContext' in globalThis
+
+export const isCanvasElement = (node: unknown): node is HTMLCanvasElement => node !== null
+  && typeof node === 'object'
+  && (node as any).nodeType === 1
+  && (node as any).tagName === 'CANVAS'
+
+export const isWebgl2 = (gl: unknown): gl is WebGL2RenderingContext => SUPPORT_WEBGL2
+  && gl instanceof WebGL2RenderingContext
 
 export function getVarTypeSize(type: string): number {
   switch (type) {
