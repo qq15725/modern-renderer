@@ -1,3 +1,12 @@
+## [0.3.1](https://github.com/qq15725/modern-renderer/compare/v0.3.0...v0.3.1) (2023-07-14)
+
+
+### Features
+
+* support use pixels update texImage2D ([ddaf507](https://github.com/qq15725/modern-renderer/commit/ddaf507da594b6fc3d7b8f80e3b931f3d5d936bd))
+
+
+
 # [0.3.0](https://github.com/qq15725/modern-renderer/compare/v0.2.14...v0.3.0) (2023-07-14)
 
 
