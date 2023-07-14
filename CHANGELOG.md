@@ -1,3 +1,12 @@
+## [0.3.2](https://github.com/qq15725/modern-renderer/compare/v0.3.1...v0.3.2) (2023-07-14)
+
+
+### Bug Fixes
+
+* document is not defined ([40c5696](https://github.com/qq15725/modern-renderer/commit/40c5696752b6ad4a009a7ed69d8bad64d4272c43))
+
+
+
 ## [0.3.1](https://github.com/qq15725/modern-renderer/compare/v0.3.0...v0.3.1) (2023-07-14)
 
 
