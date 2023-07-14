@@ -117,6 +117,12 @@ export type WebGLTextureFilterMode = 'linear' | 'nearest' | 'nearest_mipmap_near
 
 export type WebGLTextureWrapMode = 'repeat' | 'clamp_to_edge' | 'mirrored_repeat'
 
+export type WebGLTextureSource = TexImageSource | null | {
+  width: number
+  height: number
+  pixels: ArrayBufferView | null
+}
+
 export interface WebGLTextureProps {
   /**
    * ID
@@ -136,17 +142,7 @@ export interface WebGLTextureProps {
   /**
    * Texture image source
    */
-  source: TexImageSource | null
-
-  /**
-   * Texture width
-   */
-  width: number | null
-
-  /**
-   * Texture height
-   */
-  height: number | null
+  source: WebGLTextureSource
 
   /**
    * Filtering mode of the Texture.
@@ -559,8 +555,6 @@ void main() {
           target: 'texture_2d',
           index: 0,
           source: null,
-          width: null,
-          height: null,
           filterMode: 'linear',
           wrapMode: 'repeat',
           anisoLevel: 0,
@@ -859,20 +853,19 @@ void main() {
 
     const props = this.getRelatedProps(texture, 'texture')
 
-    const changed: Record<string, boolean> = {}
     for (const key in propsData) {
-      const value = (propsData as any)[key]
-      changed[key] = (props as any)[key] !== value
-      ;(props as any)[key] = value
+      (props as any)[key] = (propsData as any)[key]
     }
 
     const target = this.getBindPoint(props.target)
 
-    if (changed.source || changed.width || changed.height) {
-      if (props.source) {
-        this.gl.texImage2D(target, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, props.source)
-      } else if (props.width && props.height) {
-        this.gl.texImage2D(target, 0, this.gl.RGBA, props.width, props.height, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, null)
+    // TODO lazy texImage2D
+    const source = props.source
+    if (source) {
+      if ('pixels' in source) {
+        this.gl.texImage2D(target, 0, this.gl.RGBA, source.width, source.height, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, source.pixels)
+      } else {
+        this.gl.texImage2D(target, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, source)
       }
     }
 
