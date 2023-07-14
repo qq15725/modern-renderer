@@ -1,3 +1,12 @@
+# [0.3.0](https://github.com/qq15725/modern-renderer/compare/v0.2.14...v0.3.0) (2023-07-14)
+
+
+### Features
+
+* support not canvas ([8889f16](https://github.com/qq15725/modern-renderer/commit/8889f161978344b37cad4e451cc5374ad4fbc176))
+
+
+
 ## [0.2.14](https://github.com/qq15725/modern-renderer/compare/v0.2.13...v0.2.14) (2023-07-13)
 
 
