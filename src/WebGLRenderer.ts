@@ -677,13 +677,18 @@ void main() {
 
       const name = uniform.name.replace(/\[.*?]$/, '')
 
+      let location = this.gl.getUniformLocation(program, name)
+      if (!location) {
+        location = this.gl.getUniformLocation(program, uniform.name)
+      }
+
       props.uniforms.set(name, {
         name,
         index: i,
         type: this.bindPoints.get(uniform.type) ?? String(uniform.type) as any,
         size: uniform.size,
         isArray: name !== uniform.name,
-        location: this.gl.getUniformLocation(program, name),
+        location,
       })
     }
   }
