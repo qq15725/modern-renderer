@@ -1,3 +1,12 @@
+## [0.3.3](https://github.com/qq15725/modern-renderer/compare/v0.3.2...v0.3.3) (2023-07-15)
+
+
+### Bug Fixes
+
+* getUniformLocation issue stackgl/headless-gl[#170](https://github.com/qq15725/modern-renderer/issues/170) ([6b0586f](https://github.com/qq15725/modern-renderer/commit/6b0586fafb7de0acf0e3239ffae6c0aa913e50d3))
+
+
+
 ## [0.3.2](https://github.com/qq15725/modern-renderer/compare/v0.3.1...v0.3.2) (2023-07-14)
 
 
