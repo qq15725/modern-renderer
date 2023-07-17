@@ -248,7 +248,7 @@ export class WebGLRenderer {
   /**
    * Device pixel ratio
    */
-  resolution = DEVICE_PIXEL_RATIO
+  pixelRatio = DEVICE_PIXEL_RATIO
 
   /**
    * Canvas
@@ -1497,11 +1497,10 @@ void main() {
   }
 
   resize(width: number, height: number, updateCss = true) {
-    const resolution = this.resolution
-    const viewWidth = Math.round(width * resolution)
-    const viewHeight = Math.round(height * resolution)
-    const screenWidth = viewWidth / resolution
-    const screenHeight = viewHeight / resolution
+    const viewWidth = Math.round(width * this.pixelRatio)
+    const viewHeight = Math.round(height * this.pixelRatio)
+    const screenWidth = viewWidth / this.pixelRatio
+    const screenHeight = viewHeight / this.pixelRatio
     if (this.view) {
       this.view.width = viewWidth
       this.view.height = viewHeight
