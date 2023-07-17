@@ -1,3 +1,12 @@
+## [0.3.4](https://github.com/qq15725/modern-renderer/compare/v0.3.3...v0.3.4) (2023-07-17)
+
+
+### Features
+
+* rename resolution to pixelRatio ([d2b7a63](https://github.com/qq15725/modern-renderer/commit/d2b7a631eea606d2190ddc490e7e167bf22f1330))
+
+
+
 ## [0.3.3](https://github.com/qq15725/modern-renderer/compare/v0.3.2...v0.3.3) (2023-07-15)
 
 
