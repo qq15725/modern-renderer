@@ -1,3 +1,12 @@
+# [0.4.0](https://github.com/qq15725/modern-renderer/compare/v0.3.4...v0.4.0) (2023-07-24)
+
+
+### Features
+
+* cache viewport ([3f5c44d](https://github.com/qq15725/modern-renderer/commit/3f5c44d61e7f9068f65dfa5d014f744d090c6162))
+
+
+
 ## [0.3.4](https://github.com/qq15725/modern-renderer/compare/v0.3.3...v0.3.4) (2023-07-17)
 
 
