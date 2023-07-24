@@ -1,243 +1,32 @@
-import { DEVICE_PIXEL_RATIO, createHTMLCanvas, getVarTypeSize, isCanvasElement, isWebgl2 } from './utils'
+import {
+  DEVICE_PIXEL_RATIO,
+  createHTMLCanvas,
+  getVarTypeSize,
+  isCanvasElement,
+  isWebgl2,
+  uid,
+} from './utils'
 
-type PickTargets<T> = T extends string
-  ? T extends Uppercase<T>
-    ? Lowercase<T>
-    : never
-  : never
-
-export type WebGLTarget = PickTargets<keyof WebGL2RenderingContext>
-
-export interface WebGLExtensions {
-  loseContext?: WEBGL_lose_context | null
-  anisotropicFiltering?: EXT_texture_filter_anisotropic | null
-  floatTextureLinear?: OES_texture_float_linear | null
-  s3tc?: WEBGL_compressed_texture_s3tc | null
-  s3tcSRGB?: WEBGL_compressed_texture_s3tc_srgb | null
-  etc?: WEBGL_compressed_texture_etc | null
-  etc1?: WEBGL_compressed_texture_etc1 | null
-  pvrtc?: any | null
-  atc?: any | null
-  astc?: WEBGL_compressed_texture_astc | null
-
-  // webgl
-  instancedArrays?: ANGLE_instanced_arrays | null
-  drawBuffers?: WEBGL_draw_buffers | null
-  depthTexture?: WEBGL_depth_texture | null
-  vertexArrayObject?: OES_vertex_array_object | null
-  uint32ElementIndex?: OES_element_index_uint | null
-  floatTexture?: OES_texture_float | null
-  textureHalfFloat?: OES_texture_half_float | null
-  textureHalfFloatLinear?: OES_texture_half_float_linear | null
-
-  // webgl2
-  colorBufferFloat?: EXT_color_buffer_float | null
-}
-
-export interface WebGLFramebufferProps {
-  /**
-   * ID
-   */
-  id: number
-
-  /**
-   * Color attachment
-   */
-  colorTextures: (WebGLTexture | null)[]
-
-  /**
-   * Depth attachment
-   */
-  depthTexture: WebGLTexture | null
-
-  /**
-   * Stencil attachment
-   */
-  stencilTexture: WebGLTexture | null
-
-  /**
-   * Mip level
-   */
-  mipLevel: number
-}
-
-export type WebGLFramebufferPropsData = Partial<Omit<WebGLFramebufferProps, 'id'>>
-
-export interface WebGLProgramProps {
-  /**
-   * ID
-   */
-  id: number
-
-  /**
-   * Vertex shader source
-   */
-  vert: string
-
-  /**
-   * Fragment shader source
-   */
-  frag: string
-
-  /**
-   * Attributes info
-   */
-  attributes: Map<string, {
-    type: WebGLTarget
-    size: number
-    name: string
-    location: number
-  }>
-
-  /**
-   * Uniforms info
-   */
-  uniforms: Map<string, {
-    index: number
-    type: WebGLTarget
-    size: number
-    isArray: boolean
-    name: string
-    location: WebGLUniformLocation | null
-  }>
-
-  /**
-   * Cached binding uniforms
-   */
-  bindingUniforms: WeakMap<object, any>
-}
-
-export type WebGLProgramPropsData = Partial<Omit<WebGLProgramProps, 'id' | 'attributes' | 'uniforms'>>
-
-export type WebGLTextureIndex = number
-
-export type WebGLTextureTarget = 'texture_2d' | 'texture_cube_map'
-
-export type WebGLTextureFilterMode = 'linear' | 'nearest' | 'nearest_mipmap_nearest' | 'linear_mipmap_nearest' | 'nearest_mipmap_linear' | 'linear_mipmap_linear'
-
-export type WebGLTextureWrapMode = 'repeat' | 'clamp_to_edge' | 'mirrored_repeat'
-
-export type WebGLTextureSource = TexImageSource | null | {
-  width: number
-  height: number
-  pixels: ArrayBufferView | null
-}
-
-export interface WebGLTextureProps {
-  /**
-   * ID
-   */
-  id: number
-
-  /**
-   * Texture binding point
-   */
-  target: WebGLTextureTarget
-
-  /**
-   * Texture binding index
-   */
-  index: WebGLTextureIndex
-
-  /**
-   * Texture image source
-   */
-  source: WebGLTextureSource
-
-  /**
-   * Filtering mode of the Texture.
-   */
-  filterMode: WebGLTextureFilterMode
-
-  /**
-   * Texture coordinate wrapping mode.
-   */
-  wrapMode: WebGLTextureWrapMode
-
-  /**
-   * Defines the anisotropic filtering level of the Texture.
-   */
-  anisoLevel: number
-}
-
-export type WebGLTexturePropsData = Partial<Omit<WebGLTextureProps, 'id'>>
-
-export type WebGLVertexAttribType = 'float' | 'unsigned_byte' | 'unsigned_short'
-
-export interface WebGLVertexAttribProps {
-  buffer: WebGLBuffer
-  enable?: boolean
-  size?: number
-  type?: WebGLVertexAttribType
-  normalized?: boolean
-  stride?: number
-  offset?: number
-  divisor?: number
-}
-
-export type WebGLBufferTarget = 'array_buffer' | 'element_array_buffer'
-
-export type WebGLBufferUsage = 'static_draw' | 'dynamic_draw'
-
-export interface WebGLBufferProps extends Omit<WebGLVertexAttribProps, 'buffer'> {
-  /**
-   * ID
-   */
-  id: number
-
-  /**
-   * Buffer binding point
-   */
-  target: WebGLBufferTarget
-
-  /**
-   * Buffer data
-   */
-  data: BufferSource | null
-
-  /**
-   * Buffer usage type
-   */
-  usage: WebGLBufferUsage
-}
-
-export type WebGLBufferPropsData = Partial<Omit<WebGLBufferProps, 'id'>>
-
-export interface WebGLVertexArrayProps {
-  /**
-   * Vertex attributes
-   */
-  attributes: Record<string, WebGLVertexAttribProps>
-
-  /**
-   * Index buffer
-   */
-  elementArrayBuffer: WebGLBuffer | null
-}
-
-export type WebGLVertexArrayPropsData = Partial<{
-  /**
-   * Vertex attributes
-   */
-  attributes: Record<string, WebGLBuffer | WebGLVertexAttribProps>
-
-  /**
-   * Index buffer
-   */
-  elementArrayBuffer: WebGLBuffer | null
-}>
-
-export type WebGLDrawMode = 'points' | 'line_strip' | 'line_loop' | 'lines' | 'triangle_strip' | 'triangle_fan' | 'triangles'
-
-export interface WebGLDrawProps {
-  mode: WebGLDrawMode
-  count: number
-  first: number
-  bytesPerElement: number
-  instanceCount: number
-}
-
-let UID = 0
+import type {
+  WebGLBufferMetadata,
+  WebGLBufferOptions,
+  WebGLBufferTarget,
+  WebGLDrawOptions,
+  WebGLExtensions,
+  WebGLFramebufferMetadata,
+  WebGLFramebufferOptions,
+  WebGLProgramMetadata,
+  WebGLProgramOptions,
+  WebGLTarget,
+  WebGLTextureMetadata,
+  WebGLTextureOptions,
+  WebGLTextureTarget,
+  WebGLTextureUnit,
+  WebGLVertexArrayObjectMetadata,
+  WebGLVertexArrayObjectOptions,
+  WebGLVertexAttribOptions,
+  WebGLViewport,
+} from './WebGL'
 
 export class WebGLRenderer {
   /**
@@ -269,25 +58,35 @@ export class WebGLRenderer {
    * Extensions
    */
   extensions!: WebGLExtensions
+
   readonly bindPoints = new Map<number, WebGLTarget>()
-  readonly relatedProps = new WeakMap<object, any>()
 
   /**
-   * Binding framebuffer
+   * Related metadata
+   */
+  readonly related = new WeakMap<object, any>()
+
+  /**
+   * Default viewport (bind null framebuffer)
+   */
+  viewportNull: WebGLViewport = { x: 0, y: 0, width: 0, height: 0 }
+
+  /**
+   * Bound framebuffer
    *
    * TODO blit
    */
   framebuffer: WebGLFramebuffer | null = null
 
   /**
-   * Binding program
+   * Bound program
    */
   program: WebGLProgram | null = null
 
   /**
    * Active texture unit
    */
-  textureUnit = 0
+  textureUnit: WebGLTextureUnit = 0
 
   /**
    * Last activated texture target
@@ -295,12 +94,12 @@ export class WebGLRenderer {
   textureTarget: WebGLTextureTarget = 'texture_2d'
 
   /**
-   * Binding texture units
+   * Bound texture units
    */
   textureUnits: Record<WebGLTextureTarget, WebGLTexture | null>[] = []
 
   /**
-   * Binding array buffer
+   * Bound array buffer
    */
   arrayBuffer: WebGLBuffer | null = null
 
@@ -312,18 +111,18 @@ export class WebGLRenderer {
   /**
    * Default vertex array (bind null)
    */
-  vertexArrayNull: WebGLVertexArrayProps = {
+  vertexArrayNull: WebGLVertexArrayObjectMetadata = {
     attributes: {},
     elementArrayBuffer: null,
   }
 
   /**
-   * Binding vertex array
+   * Bound vertex array
    */
-  vertexArray: WebGLVertexArrayProps = this.vertexArrayNull
+  vertexArray: WebGLVertexArrayObjectMetadata = this.vertexArrayNull
 
   /**
-   * Binding vertex array object
+   * Bound vertex array object
    */
   vertexArrayObject: WebGLVertexArrayObject | null = null
 
@@ -360,16 +159,16 @@ export class WebGLRenderer {
    */
   protected setupContext(view: HTMLCanvasElement, options?: WebGLContextAttributes): this {
     this.view = view
-    let gl: any = view.getContext('webgl2', options)
+    let gl = <any>(view.getContext('webgl2', options) || view.getContext('experimental-webgl2', options))
     let version: 1 | 2 = 2
 
     if (!gl) {
-      gl = view.getContext('webgl', options)
+      gl = view.getContext('webgl', options) || view.getContext('experimental-webgl', options)
       version = 1
     }
 
     if (!gl) {
-      throw new Error('failed to getContext')
+      throw new Error('Unable to get context')
     }
 
     this.gl = gl
@@ -492,7 +291,7 @@ export class WebGLRenderer {
   protected onContextRestored() {}
 
   /**
-   * Get WebGL target(binding point)
+   * Get WebGL point (target)
    *
    * @param target
    */
@@ -500,113 +299,51 @@ export class WebGLRenderer {
     return (this.gl as any)[target.toUpperCase()] as number
   }
 
-  getRelatedProps(source: object, type: 'framebuffer'): WebGLFramebufferProps
-  getRelatedProps(source: object, type: 'program'): WebGLProgramProps
-  getRelatedProps(source: object, type: 'buffer'): WebGLBufferProps
-  getRelatedProps(source: object, type: 'texture'): WebGLTextureProps
-  getRelatedProps(source: object, type: 'vertexArray'): WebGLVertexArrayProps
-  getRelatedProps(source: object, type: string): any {
-    let props = this.relatedProps.get(source)
-
-    if (props) {
-      return props
-    }
-
-    const id = (source as any)?.__SPECTOR_Object_TAG?.id ?? ++UID
-
-    switch (type) {
-      case 'framebuffer':
-        props = {
-          id,
-          colorTextures: [],
-          depthTexture: null,
-          stencilTexture: null,
-          mipLevel: 0,
-        } as WebGLFramebufferProps
-        break
-      case 'program':
-        props = {
-          id,
-          vert: `precision mediump float;
-attribute vec2 position;
-void main() {
-  gl_Position = vec4(position, 0, 1);
-}`,
-          frag: `precision mediump float;
-void main() {
-  gl_FragColor = vec4(1, 1, 1, 1);
-}`,
-          attributes: new Map(),
-          uniforms: new Map(),
-          bindingUniforms: new WeakMap(),
-        } as WebGLProgramProps
-        break
-      case 'buffer':
-        props = {
-          id,
-          target: 'array_buffer',
-          data: null,
-          usage: 'static_draw',
-        } as WebGLBufferProps
-        break
-      case 'texture':
-        props = {
-          id,
-          target: 'texture_2d',
-          index: 0,
-          source: null,
-          filterMode: 'linear',
-          wrapMode: 'repeat',
-          anisoLevel: 0,
-        } as WebGLTextureProps
-        break
-      case 'vertexArray':
-        props = {
-          id,
-          attributes: {},
-          elementArrayBuffer: null,
-        } as WebGLVertexArrayProps
-        break
-    }
-
-    this.relatedProps.set(source, props)
-
-    return props
-  }
-
   createShader(source: string, type: 'vertex_shader' | 'fragment_shader'): WebGLShader {
     const shader = this.gl.createShader(this.getBindPoint(type))
 
     if (!shader) {
-      throw new Error('failed to createShader')
+      throw new Error('Unable to create shader')
     }
 
     this.gl.shaderSource(shader, source)
     this.gl.compileShader(shader)
 
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      throw new Error(`failed to compilingShader :\n${ source }\n${ this.gl.getShaderInfoLog(shader) }`)
+      throw new Error(`Unable to compiling shader :\n${ source }\n${ this.gl.getShaderInfoLog(shader) }`)
     }
 
     return shader
   }
 
-  createProgram(propsData?: WebGLProgramPropsData): WebGLProgram {
+  createProgram(options?: WebGLProgramOptions): WebGLProgram {
     const program = this.gl.createProgram()
 
     if (!program) {
-      throw new Error('failed to createProgram')
+      throw new Error('Unable to create program')
     }
 
-    if (propsData) {
-      this.updateProgram(program, propsData)
+    if (options) {
+      this.updateProgram(program, options)
     }
 
     return program
   }
 
-  updateProgram(propsData: WebGLProgramPropsData): void
-  updateProgram(program: WebGLProgram, propsData: WebGLProgramPropsData): void
+  getProgramMetadata(program: WebGLProgram): WebGLProgramMetadata {
+    let metadata: WebGLProgramMetadata = this.related.get(program)
+    if (!metadata) {
+      this.related.set(program, metadata = {
+        attributes: new Map(),
+        uniforms: new Map(),
+        boundUniforms: new WeakMap(),
+      })
+    }
+    return metadata
+  }
+
+  updateProgram(options: WebGLProgramOptions): void
+  updateProgram(program: WebGLProgram, options: WebGLProgramOptions): void
   updateProgram(...args: any[]): void {
     if (args.length > 1) {
       const oldValue = this.program
@@ -616,23 +353,15 @@ void main() {
       return
     }
 
-    const propsData = args[0]
+    const options = args[0] as WebGLProgramOptions
     const program = this.program
 
     if (!program) return
 
-    const props = this.getRelatedProps(program, 'program')
+    const metadata = this.getProgramMetadata(program)
 
-    for (const key in propsData) {
-      (props as any)[key] = (propsData as any)[key]
-    }
-
-    if (!props.frag.includes('precision')) {
-      props.frag = `precision mediump float;\n${ props.frag }`
-    }
-
-    const vert = this.createShader(props.vert, 'vertex_shader')
-    const frag = this.createShader(props.frag, 'fragment_shader')
+    const vert = this.createShader(options.vert, 'vertex_shader')
+    const frag = this.createShader(options.frag, 'fragment_shader')
 
     this.gl.attachShader(program, vert)
     this.gl.attachShader(program, frag)
@@ -641,11 +370,11 @@ void main() {
     this.gl.deleteShader(frag)
 
     if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
-      throw new Error(`failed to linkProgram: ${ this.gl.getProgramInfoLog(program) }`)
+      throw new Error(`Unable to link program: ${ this.gl.getProgramInfoLog(program) }`)
     }
 
-    props.attributes.clear()
-    props.uniforms.clear()
+    metadata.attributes.clear()
+    metadata.uniforms.clear()
 
     for (
       let len = this.gl.getProgramParameter(program, this.gl.ACTIVE_ATTRIBUTES), i = 0;
@@ -658,7 +387,7 @@ void main() {
 
       const type = this.bindPoints.get(attrib.type) ?? String(attrib.type) as any
 
-      props.attributes.set(attrib.name, {
+      metadata.attributes.set(attrib.name, {
         type,
         name: attrib.name,
         size: getVarTypeSize(type),
@@ -682,7 +411,7 @@ void main() {
         location = this.gl.getUniformLocation(program, uniform.name)
       }
 
-      props.uniforms.set(name, {
+      metadata.uniforms.set(name, {
         name,
         index: i,
         type: this.bindPoints.get(uniform.type) ?? String(uniform.type) as any,
@@ -713,16 +442,16 @@ void main() {
     }
   }
 
-  createFramebuffer(propsData?: WebGLFramebufferPropsData): WebGLFramebuffer {
+  createFramebuffer(options?: WebGLFramebufferOptions): WebGLFramebuffer {
     const framebuffer = this.gl.createFramebuffer()
 
     if (!framebuffer) {
-      throw new Error('failed to createFramebuffer')
+      throw new Error('Unable to create framebuffer')
     }
 
-    if (propsData) {
+    if (options) {
       this.activeFramebuffer(framebuffer, () => {
-        this.updateFramebuffer(propsData)
+        this.updateFramebuffer(options)
         return false
       })
     }
@@ -730,34 +459,38 @@ void main() {
     return framebuffer
   }
 
-  updateFramebuffer(propsData: WebGLFramebufferPropsData): void
-  updateFramebuffer(framebuffer: WebGLFramebuffer, propsData: WebGLFramebufferPropsData): void
+  getFramebufferMetadata(framebuffer: WebGLFramebuffer): WebGLFramebufferMetadata {
+    let metadata: WebGLFramebufferMetadata = this.related.get(framebuffer)
+    if (!metadata) {
+      this.related.set(framebuffer, metadata = {
+        viewport: { x: 0, y: 0, width: 0, height: 0 },
+      })
+    }
+    return metadata
+  }
+
+  updateFramebuffer(options: WebGLFramebufferOptions): void
+  updateFramebuffer(framebuffer: WebGLFramebuffer, options: WebGLFramebufferOptions): void
   updateFramebuffer(...args: any[]): void {
     if (args.length > 1) {
       this.activeFramebuffer(args[0])
       return this.updateFramebuffer(args[1])
     }
 
-    const propsData = args[0]
+    const options = args[0] as WebGLFramebufferOptions
     const framebuffer = this.framebuffer
 
     if (!framebuffer) return
 
-    const props = this.getRelatedProps(framebuffer, 'framebuffer')
-
-    for (const key in propsData) {
-      (props as any)[key] = (propsData as any)[key]
-    }
-
-    if (props.colorTextures) {
-      for (let len = props.colorTextures.length, i = 0; i < len; i++) {
-        const texture = props.colorTextures[i]
+    if (options.colorTextures) {
+      for (let len = options.colorTextures.length, i = 0; i < len; i++) {
+        const texture = options.colorTextures[i]
 
         this.activeTexture({
-          index: 0,
+          unit: 0,
           target: 'texture_2d',
           value: texture,
-          forceIndex: true,
+          forceUpdateUnit: true,
         })
 
         this.gl.framebufferTexture2D(
@@ -765,31 +498,31 @@ void main() {
           this.gl.COLOR_ATTACHMENT0 + i,
           this.gl.TEXTURE_2D,
           texture,
-          props.mipLevel,
+          options.mipLevel ?? 0,
         )
       }
     }
 
-    if (props.colorTextures.length > 1 && 'drawBuffers' in this.gl) {
+    if (options.colorTextures && options.colorTextures.length > 1 && 'drawBuffers' in this.gl) {
       this.gl.drawBuffers(
-        props.colorTextures.map((_, i) => this.gl.COLOR_ATTACHMENT0 + i),
+        options.colorTextures.map((_, i) => this.gl.COLOR_ATTACHMENT0 + i),
       )
     }
 
-    if (props.depthTexture && (this.version > 1 || this.extensions.depthTexture)) {
+    if (options.depthTexture && (this.version > 1 || this.extensions.depthTexture)) {
       this.activeTexture({
-        index: 0,
+        unit: 0,
         target: 'texture_2d',
-        value: props.depthTexture,
-        forceIndex: true,
+        value: options.depthTexture,
+        forceUpdateUnit: true,
       })
 
       this.gl.framebufferTexture2D(
         this.gl.FRAMEBUFFER,
         this.gl.DEPTH_ATTACHMENT,
         this.gl.TEXTURE_2D,
-        props.depthTexture,
-        props.mipLevel,
+        options.depthTexture,
+        options.mipLevel ?? 0,
       )
     }
   }
@@ -814,21 +547,25 @@ void main() {
     }
   }
 
-  createTexture(propsData?: WebGLTexturePropsData): WebGLTexture {
+  createTexture(options?: WebGLTextureOptions): WebGLTexture {
     const texture = this.gl.createTexture()
 
     if (!texture) {
-      throw new Error('failed to createTexture')
+      throw new Error('Unable to create texture')
     }
 
-    if (propsData) {
+    if (options) {
       this.activeTexture({
-        index: propsData.index,
-        target: propsData.target,
+        unit: options.unit,
+        target: options.target,
         value: texture,
-        forceIndex: true,
+        forceUpdateUnit: true,
       }, () => {
-        this.updateTexture(propsData)
+        this.updateTexture({
+          filterMode: 'linear',
+          wrapMode: 'repeat',
+          ...options,
+        })
         return false
       })
     }
@@ -836,121 +573,154 @@ void main() {
     return texture
   }
 
-  updateTexture(propsData: WebGLTexturePropsData): void
-  updateTexture(texture: WebGLTexture, propsData: WebGLTexturePropsData): void
+  getTextureMetadata(texture: WebGLTexture): WebGLTextureMetadata {
+    let metadata: WebGLTextureMetadata = this.related.get(texture)
+    if (!metadata) {
+      this.related.set(texture, metadata = {})
+    }
+    return metadata
+  }
+
+  updateTexture(options: WebGLTextureOptions): void
+  updateTexture(texture: WebGLTexture, options: WebGLTextureOptions): void
   updateTexture(...args: any[]): void {
     if (args.length > 1) {
       this.activeTexture({
-        index: args[1].index,
+        unit: args[1].unit,
         target: args[1].target,
         value: args[0] as WebGLTexture,
-        forceIndex: true,
+        forceUpdateUnit: true,
       })
 
-      this.updateTexture(args[1] as WebGLTexturePropsData)
+      this.updateTexture(args[1])
       return
     }
 
-    const propsData = args[0] as WebGLTexturePropsData
-    const texture = this.textureUnits[this.textureUnit][propsData.target ?? this.textureTarget]
+    const {
+      target = this.textureTarget,
+      source,
+      filterMode,
+      wrapMode,
+      anisoLevel,
+    } = args[0] as WebGLTextureOptions
+
+    const texture = this.textureUnits[this.textureUnit][target]
 
     if (!texture) return
 
-    const props = this.getRelatedProps(texture, 'texture')
-
-    for (const key in propsData) {
-      (props as any)[key] = (propsData as any)[key]
-    }
-
-    const target = this.getBindPoint(props.target)
+    const metadata = this.getTextureMetadata(texture)
+    const glTarget = this.getBindPoint(target)
 
     // TODO lazy texImage2D
-    const source = props.source
-    if (source) {
-      if ('pixels' in source) {
-        this.gl.texImage2D(target, 0, this.gl.RGBA, source.width, source.height, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, source.pixels)
+    if (source !== undefined) {
+      if (source === null) {
+        this.gl.texImage2D(glTarget, 0, this.gl.RGBA, 1, 1, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, null)
+        metadata.width = 1
+        metadata.height = 1
+      } else if ('pixels' in source) {
+        this.gl.texImage2D(glTarget, 0, this.gl.RGBA, source.width, source.height, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, source.pixels)
+        metadata.width = source.width
+        metadata.height = source.height
       } else {
-        this.gl.texImage2D(target, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, source)
+        this.gl.texImage2D(glTarget, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, source)
+        const any = source as any
+        metadata.width = Number(any.naturalWidth || any.videoWidth || any.width || 0)
+        metadata.height = Number(any.naturalHeight || any.videoHeight || any.height || 0)
       }
     }
 
-    const wrapMode = this.getBindPoint(props.wrapMode)
-    this.gl.texParameteri(target, this.gl.TEXTURE_WRAP_S, wrapMode)
-    this.gl.texParameteri(target, this.gl.TEXTURE_WRAP_T, wrapMode)
-
-    const filterMode = this.getBindPoint(props.filterMode.split('_')[0] as any)
-    if (props.filterMode.includes('_')) {
-      this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, this.getBindPoint(props.filterMode))
-    } else {
-      this.gl.texParameteri(target, this.gl.TEXTURE_MIN_FILTER, filterMode)
+    if (wrapMode && metadata.wrapMode !== wrapMode) {
+      metadata.wrapMode = wrapMode
+      const glWrapMode = this.getBindPoint(wrapMode)
+      this.gl.texParameteri(glTarget, this.gl.TEXTURE_WRAP_S, glWrapMode)
+      this.gl.texParameteri(glTarget, this.gl.TEXTURE_WRAP_T, glWrapMode)
     }
-    this.gl.texParameteri(target, this.gl.TEXTURE_MAG_FILTER, filterMode)
+
+    if (filterMode && metadata.filterMode !== filterMode) {
+      metadata.filterMode = filterMode
+      const glFilterMode = this.getBindPoint(filterMode.split('_')[0] as any)
+      if (filterMode.includes('_')) {
+        this.gl.texParameteri(glTarget, this.gl.TEXTURE_MIN_FILTER, this.getBindPoint(filterMode))
+      } else {
+        this.gl.texParameteri(glTarget, this.gl.TEXTURE_MIN_FILTER, glFilterMode)
+      }
+      this.gl.texParameteri(glTarget, this.gl.TEXTURE_MAG_FILTER, glFilterMode)
+    }
 
     // ext: anisotropicFiltering
     if (
-      props.anisoLevel
-      && props.filterMode === 'linear'
+      anisoLevel
+      && filterMode === 'linear'
       && this.extensions.anisotropicFiltering
     ) {
-      const {
-        MAX_TEXTURE_MAX_ANISOTROPY_EXT,
-        TEXTURE_MAX_ANISOTROPY_EXT,
-      } = this.extensions.anisotropicFiltering
+      if (metadata.anisoLevel !== anisoLevel) {
+        metadata.anisoLevel = anisoLevel
 
-      this.gl.texParameterf(
-        target,
-        TEXTURE_MAX_ANISOTROPY_EXT,
-        Math.min(
-          props.anisoLevel,
-          this.gl.getParameter(MAX_TEXTURE_MAX_ANISOTROPY_EXT),
-        ),
-      )
+        const {
+          MAX_TEXTURE_MAX_ANISOTROPY_EXT,
+          TEXTURE_MAX_ANISOTROPY_EXT,
+        } = this.extensions.anisotropicFiltering
+
+        this.gl.texParameterf(
+          glTarget,
+          TEXTURE_MAX_ANISOTROPY_EXT,
+          Math.min(
+            anisoLevel,
+            this.gl.getParameter(MAX_TEXTURE_MAX_ANISOTROPY_EXT),
+          ),
+        )
+      }
     }
   }
 
   activeTexture(
     texture: WebGLTexture | null | {
-      index?: WebGLTextureIndex
+      unit?: WebGLTextureUnit
+      forceUpdateUnit?: boolean
       target?: WebGLTextureTarget
-      forceIndex?: boolean
       value: WebGLTexture | null
     },
     then?: (target: number) => void | false,
   ): void {
     // normalization params
-    let value, target, index, forceIndex
+    let value, target: WebGLTextureTarget | undefined, unit, forceUpdateUnit
     if (texture && 'value' in texture) {
-      ({ target, value, index, forceIndex } = texture)
+      ({ target, value, unit, forceUpdateUnit } = texture)
     } else {
       value = texture
     }
-    if (target === undefined || index === undefined) {
-      const props = value ? this.getRelatedProps(value, 'texture') : undefined
-      target = target ?? props?.target ?? 'texture_2d'
-      index = index ?? props?.index ?? 0
+    if (value) {
+      const metadata = this.getTextureMetadata(value)
+      if (target === undefined) target = metadata.target ?? 'texture_2d'
+      if (unit === undefined) unit = metadata.unit ?? 0
+      metadata.target = target
+      metadata.unit = unit
+    } else {
+      if (target === undefined) target = 'texture_2d'
+      if (unit === undefined) unit = 0
     }
 
     // get or init texture unit
-    let textureUnit = this.textureUnits[index]
+    let textureUnit = this.textureUnits[unit]
     if (!textureUnit) {
-      this.textureUnits[index] = textureUnit = { texture_2d: null, texture_cube_map: null }
+      this.textureUnits[unit] = textureUnit = { texture_2d: null, texture_cube_map: null }
     }
 
     // changed
     const oldValue = textureUnit[target] ?? null
-    const oldIndex = this.textureUnit
+    const oldUnit = this.textureUnit
     const oldTarget = this.textureTarget
     const changedTexture = value !== oldValue
     const changed = {
-      index: index !== oldIndex && (changedTexture || forceIndex),
+      unit: unit !== oldUnit && (changedTexture || forceUpdateUnit),
       texture: changedTexture,
     }
 
     // active and bind
     const glTarget = this.getBindPoint(target)
-    if (changed.index) {
-      this.gl.activeTexture(this.gl.TEXTURE0 + index)
-      this.textureUnit = index
+    if (changed.unit) {
+      this.gl.activeTexture(this.gl.TEXTURE0 + unit)
+      this.textureUnit = unit
     }
     if (changed.texture) {
       this.gl.bindTexture(glTarget, value)
@@ -964,27 +734,27 @@ void main() {
         this.gl.bindTexture(glTarget, oldValue)
         textureUnit[target] = oldValue
       }
-      if (changed.index) {
-        this.gl.activeTexture(this.gl.TEXTURE0 + oldIndex)
-        this.textureUnit = oldIndex
+      if (changed.unit) {
+        this.gl.activeTexture(this.gl.TEXTURE0 + oldUnit)
+        this.textureUnit = oldUnit
       }
       this.textureTarget = oldTarget
     }
   }
 
-  createBuffer(propsData?: WebGLBufferPropsData): WebGLBuffer {
+  createBuffer(options?: WebGLBufferOptions): WebGLBuffer {
     const buffer = this.gl.createBuffer()
 
     if (!buffer) {
       throw new Error('failed to createBuffer')
     }
 
-    if (propsData) {
+    if (options) {
       this.activeBuffer({
-        target: propsData.target,
+        target: options.target,
         value: buffer,
       }, () => {
-        this.updateBuffer(propsData)
+        this.updateBuffer(options)
         return false
       })
     }
@@ -992,8 +762,21 @@ void main() {
     return buffer
   }
 
-  updateBuffer(propsData: WebGLBufferPropsData): void
-  updateBuffer(buffer: WebGLBuffer, propsData: WebGLBufferPropsData): void
+  getBufferMetadata(buffer: WebGLBuffer): WebGLBufferMetadata {
+    let metadata: WebGLBufferMetadata = this.related.get(buffer)
+    if (!metadata) {
+      this.related.set(buffer, metadata = {
+        id: uid(buffer),
+        length: 0,
+        byteLength: 0,
+        bytesPerElement: 0,
+      })
+    }
+    return metadata
+  }
+
+  updateBuffer(options: WebGLBufferOptions): void
+  updateBuffer(buffer: WebGLBuffer, options: WebGLBufferOptions): void
   updateBuffer(...args: any[]): void {
     if (args.length > 1) {
       this.activeBuffer({
@@ -1004,38 +787,43 @@ void main() {
       return
     }
 
-    const propsData = args[0] as WebGLBufferPropsData
-    const target = propsData.target ?? this.arrayBufferTarget
+    const {
+      target = this.arrayBufferTarget,
+      usage = 'static_draw',
+      data,
+    } = args[0] as WebGLBufferOptions
+
     const buffer = target === 'array_buffer'
       ? this.arrayBuffer
       : this.vertexArray.elementArrayBuffer
 
     if (!buffer) return
 
-    const props = this.getRelatedProps(buffer, 'buffer')
-    const changed: Record<string, boolean> = {
-      byteLength: props.data !== null && (props.data.byteLength ?? 0) >= (propsData.data?.byteLength ?? 0),
-    }
-
-    for (const key in propsData) {
-      const value = (propsData as any)[key]
-      changed[key] = (props as any)[key] !== value
-      ;(props as any)[key] = value
-    }
-
-    const bindingTarget = this.getBindPoint(props.target)
-
-    if (changed.data || changed.usage || changed.byteLength) {
-      if (
-        props.data
-        && !changed.usage
-        && changed.byteLength
-      ) {
-        this.gl.bufferSubData(bindingTarget, 0, props.data)
+    let source
+    if (data instanceof Array) {
+      if (target === 'array_buffer') {
+        source = new Float32Array(data)
       } else {
-        this.gl.bufferData(bindingTarget, props.data, this.getBindPoint(props.usage))
+        source = new Uint32Array(data)
       }
+    } else {
+      source = data
     }
+
+    const glTarget = this.getBindPoint(target)
+    const metadata = this.getBufferMetadata(buffer)
+
+    if (source && source.byteLength <= metadata.byteLength) {
+      this.gl.bufferSubData(glTarget, 0, source)
+    } else {
+      this.gl.bufferData(glTarget, source, this.getBindPoint(usage))
+    }
+
+    metadata.target = target
+    metadata.usage = usage
+    metadata.length = (source as any)?.length ?? 0
+    metadata.byteLength = source?.byteLength ?? 0
+    metadata.bytesPerElement = metadata.length ? metadata.byteLength / metadata.length : 0
   }
 
   activeBuffer(
@@ -1052,9 +840,12 @@ void main() {
     } else {
       value = buffer
     }
-    if (target === undefined) {
-      const props = value ? this.getRelatedProps(value, 'buffer') : null
-      target = target ?? props?.target ?? 'array_buffer'
+    if (value) {
+      const metadata = this.getBufferMetadata(value)
+      if (target === undefined) target = metadata.target ?? this.arrayBufferTarget
+      metadata.target = target
+    } else {
+      if (target === undefined) target = this.arrayBufferTarget
     }
 
     // changed
@@ -1090,68 +881,79 @@ void main() {
     }
   }
 
-  activeVertexAttrib(key: string, props: WebGLVertexAttribProps, location = 0): void {
+  activeVertexAttrib(key: string, options: WebGLVertexAttribOptions, location = 0): void {
     this.activeBuffer({
       target: 'array_buffer',
-      value: props.buffer,
+      value: options.buffer,
     })
 
     this.gl.enableVertexAttribArray(location)
     this.gl.vertexAttribPointer(
       location,
-      props.size ?? 0,
-      this.getBindPoint(props.type ?? 'float'),
-      props.normalized ?? false,
-      props.stride ?? 0,
-      props.offset ?? 0,
+      options.size ?? 0,
+      this.getBindPoint(options.type ?? 'float'),
+      options.normalized ?? false,
+      options.stride ?? 0,
+      options.offset ?? 0,
     )
 
     // ext: instancedArrays
-    if (props.divisor) {
+    if (options.divisor) {
       if ('vertexAttribDivisor' in this.gl) {
-        this.gl.vertexAttribDivisor(location, props.divisor)
+        this.gl.vertexAttribDivisor(location, options.divisor)
       } else {
-        console.warn('failed to active vertex array object, GPU Instancing is not supported on this device')
+        console.warn('Failed to active vertex array object, GPU Instancing is not supported on this device')
       }
     }
 
     this.vertexArray.attributes[key] = {
       enable: true,
-      buffer: props.buffer,
-      size: props.size,
-      type: props.type,
-      normalized: props.normalized,
-      stride: props.stride,
-      offset: props.offset,
-      divisor: props.divisor,
+      buffer: options.buffer,
+      size: options.size,
+      type: options.type,
+      normalized: options.normalized,
+      stride: options.stride,
+      offset: options.offset,
+      divisor: options.divisor,
     }
   }
 
-  createVertexArray(propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
-  createVertexArray(program?: WebGLProgram, propsData?: WebGLVertexArrayPropsData): WebGLVertexArrayObject | null
+  createVertexArray(options?: WebGLVertexArrayObjectOptions): WebGLVertexArrayObject | null
+  createVertexArray(program?: WebGLProgram, options?: WebGLVertexArrayObjectOptions): WebGLVertexArrayObject | null
   createVertexArray(...args: any[]): WebGLVertexArrayObject | null {
-    if ('createVertexArray' in this.gl) {
-      const vertexArray = this.gl.createVertexArray()
-
-      if (!vertexArray) {
-        throw new Error('failed to createVertexArray')
-      }
-
-      if (args.length === 2) {
-        this.updateVertexArray(args[0], vertexArray, args[1])
-      } else if (args.length === 1) {
-        this.updateVertexArray(vertexArray, args[0])
-      }
-
-      return vertexArray
+    if (!('createVertexArray' in this.gl)) {
+      return null
     }
 
-    return null
+    const vertexArray = this.gl.createVertexArray()
+
+    if (!vertexArray) {
+      throw new Error('Unable to create vertex array')
+    }
+
+    if (args.length === 2) {
+      this.updateVertexArray(args[0], vertexArray, args[1])
+    } else if (args.length === 1) {
+      this.updateVertexArray(vertexArray, args[0])
+    }
+
+    return vertexArray
   }
 
-  updateVertexArray(propsData: WebGLVertexArrayPropsData): void
-  updateVertexArray(vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
-  updateVertexArray(program: WebGLProgram, vertexArray: WebGLVertexArrayObject, propsData: WebGLVertexArrayPropsData): void
+  getVertexArrayMetadata(vertexArray: WebGLVertexArrayObject): WebGLVertexArrayObjectMetadata {
+    let metadata: WebGLVertexArrayObjectMetadata = this.related.get(vertexArray)
+    if (!metadata) {
+      this.related.set(vertexArray, metadata = {
+        attributes: {},
+        elementArrayBuffer: null,
+      })
+    }
+    return metadata
+  }
+
+  updateVertexArray(options: WebGLVertexArrayObjectOptions): void
+  updateVertexArray(vertexArray: WebGLVertexArrayObject, options: WebGLVertexArrayObjectOptions): void
+  updateVertexArray(program: WebGLProgram, vertexArray: WebGLVertexArrayObject, options: WebGLVertexArrayObjectOptions): void
   updateVertexArray(...args: any[]): void {
     if (args.length > 2) {
       this.activeProgram(args[0])
@@ -1161,8 +963,8 @@ void main() {
       if (args[0]) {
         const vertexArrayObject = args[0] as WebGLVertexArrayObject
         this.activeVertexArray(vertexArrayObject)
-        this.updateVertexArray(args[1] as WebGLVertexArrayPropsData)
-        const props = this.getRelatedProps(vertexArrayObject, 'vertexArray')
+        this.updateVertexArray(args[1] as WebGLVertexArrayObjectOptions)
+        const props = this.getVertexArrayMetadata(vertexArrayObject)
         props.attributes = this.vertexArray.attributes
         props.elementArrayBuffer = this.vertexArray.elementArrayBuffer
         this.activeVertexArray(null)
@@ -1176,30 +978,30 @@ void main() {
     const program = this.program
 
     if (!program) return
-    const propsData = args[0] as WebGLVertexArrayPropsData
+    const options = args[0] as WebGLVertexArrayObjectOptions
 
     // active vertex attrib
-    if (propsData.attributes) {
-      const programProps = this.getRelatedProps(program, 'program')
+    if (options.attributes) {
+      const programProps = this.related.get(program)
       const stride: Record<number, number> = {}
       const offset: Record<number, number> = {}
-      const attribs = new Map<string, WebGLVertexAttribProps & {
+      const attribs = new Map<string, WebGLVertexAttribOptions & {
         id: number
         location?: number
         byteLength: number
       }>()
 
-      for (const key in propsData.attributes) {
-        const attrib = propsData.attributes[key]
+      for (const key in options.attributes) {
+        const attrib = options.attributes[key]
 
         // normalization params
-        let buffer, bufferProps
+        let buffer, bufferProps: WebGLVertexAttribOptions & WebGLBufferMetadata
         if ('buffer' in attrib) {
           buffer = attrib.buffer
-          bufferProps = { ...this.getRelatedProps(buffer, 'buffer'), ...attrib }
+          bufferProps = { ...this.getBufferMetadata(buffer), ...attrib }
         } else {
           buffer = attrib
-          bufferProps = this.getRelatedProps(buffer, 'buffer')
+          bufferProps = { ...this.getBufferMetadata(buffer), buffer }
         }
 
         stride[bufferProps.id] = stride[bufferProps.id] ?? 0
@@ -1247,14 +1049,14 @@ void main() {
     // active index buffer
     this.activeBuffer({
       target: 'element_array_buffer',
-      value: propsData.elementArrayBuffer ?? null,
+      value: options.elementArrayBuffer ?? null,
     })
 
-    this.vertexArray.elementArrayBuffer = propsData.elementArrayBuffer ?? null
+    this.vertexArray.elementArrayBuffer = options.elementArrayBuffer ?? null
   }
 
   activeVertexArray(
-    vertexArrayObject: WebGLVertexArrayObject | null | WebGLVertexArrayPropsData,
+    vertexArrayObject: WebGLVertexArrayObject | null | WebGLVertexArrayObjectOptions,
     then?: () => void | false,
   ): void {
     if (vertexArrayObject && 'attributes' in vertexArrayObject) {
@@ -1273,7 +1075,7 @@ void main() {
         this.gl.bindVertexArray(vertexArrayObject)
         this.vertexArrayObject = vertexArrayObject
         if (vertexArrayObject) {
-          this.vertexArray = { ...this.getRelatedProps(vertexArrayObject, 'vertexArray') }
+          this.vertexArray = { ...this.getVertexArrayMetadata(vertexArrayObject) }
         } else {
           this.vertexArray = this.vertexArrayNull
         }
@@ -1300,19 +1102,23 @@ void main() {
     const program = this.program
     if (!program) return
 
-    const props = this.getRelatedProps(program, 'program')
     const uniforms = args[0]
+
+    const {
+      uniforms: uniformsInfo,
+      boundUniforms,
+    } = this.getProgramMetadata(program)
 
     for (const key in uniforms) {
       const value = uniforms[key]
-      const info = props.uniforms.get(key)
+      const info = uniformsInfo.get(key)
       if (!info) continue
       const { type, isArray, location } = info
       if (!location) continue
 
-      const oldValue = props.bindingUniforms.get(location)
+      const oldValue = boundUniforms.get(location)
       if (oldValue === value) continue
-      props.bindingUniforms.set(location, value)
+      boundUniforms.set(location, value)
 
       switch (type) {
         case 'float':
@@ -1384,7 +1190,27 @@ void main() {
   }
 
   viewport(x = 0, y = 0, width = this.gl.drawingBufferWidth, height = this.gl.drawingBufferHeight) {
+    let viewport = this.viewportNull
+
+    if (this.framebuffer) {
+      viewport = this.getFramebufferMetadata(this.framebuffer).viewport
+    }
+
+    if (
+      viewport.x === x
+      && viewport.y === y
+      && viewport.width === width
+      && viewport.height === height
+    ) {
+      return
+    }
+
     this.gl.viewport(x, y, width, height)
+
+    viewport.x = x
+    viewport.y = y
+    viewport.width = width
+    viewport.height = height
   }
 
   clear(
@@ -1393,69 +1219,44 @@ void main() {
     this.gl.clear(mask)
   }
 
-  draw(propsData: Partial<WebGLDrawProps> = {}) {
+  draw(options: WebGLDrawOptions = {}) {
     const {
       mode = 'triangles',
       first = 0,
       instanceCount,
-    } = propsData
+    } = options
 
     let {
       count = 0,
       bytesPerElement = 0,
-    } = propsData
+    } = options
 
     if (!count || !bytesPerElement) {
-      const elementArrayBuffer = this.vertexArray.elementArrayBuffer
-      if (elementArrayBuffer) {
-        const props = this.getRelatedProps(elementArrayBuffer, 'buffer')
-        if (props.data) {
-          if (!count) {
-            if ('length' in props.data) {
-              count = Number(props.data.length)
-            }
-          }
-
-          if (!bytesPerElement) {
-            if ('bytesPerElement' in props.data) {
-              bytesPerElement = Number(props.data.bytesPerElement)
-            }
-
-            if ('length' in props.data && 'byteLength' in props.data) {
-              bytesPerElement = ~~(Number(props.data.byteLength) / Number(props.data.length))
-            }
-          }
-        }
-      }
-    }
-
-    if (!count) {
-      const buffer = Object.values(this.vertexArray.attributes)[0]
+      const buffer = this.vertexArray.elementArrayBuffer ?? Object.values(this.vertexArray.attributes)[0]
       if (buffer) {
-        const props = this.getRelatedProps(buffer, 'buffer')
-        if (props.size && props.data && 'length' in props.data) {
-          count = ~~(Number(props.data.length) / props.size)
-        }
+        const metadata = this.getBufferMetadata(buffer)
+        if (!count) count = metadata.length
+        if (!bytesPerElement) bytesPerElement = metadata.bytesPerElement
       }
     }
 
-    const bindingMode = this.getBindPoint(mode)
+    const glMode = this.getBindPoint(mode)
 
     if (bytesPerElement) {
       if (bytesPerElement === 2 || (bytesPerElement === 4 && Boolean(this.extensions.uint32ElementIndex))) {
         const type = bytesPerElement === 2 ? this.gl.UNSIGNED_SHORT : this.gl.UNSIGNED_INT
         if (instanceCount && 'drawElementsInstanced' in this.gl) {
-          this.gl.drawElementsInstanced(bindingMode, count, type, first * bytesPerElement, instanceCount)
+          this.gl.drawElementsInstanced(glMode, count, type, first * bytesPerElement, instanceCount)
         } else {
-          this.gl.drawElements(bindingMode, count, type, first * bytesPerElement)
+          this.gl.drawElements(glMode, count, type, first * bytesPerElement)
         }
       } else {
-        console.warn('unsupported index buffer type: uint32')
+        console.warn('Unsupported index buffer type: uint32')
       }
     } else if (instanceCount && 'drawArraysInstanced' in this.gl) {
-      this.gl.drawArraysInstanced(bindingMode, first, count, instanceCount)
+      this.gl.drawArraysInstanced(glMode, first, count, instanceCount)
     } else {
-      this.gl.drawArrays(bindingMode, first, count)
+      this.gl.drawArrays(glMode, first, count)
     }
   }
 

@@ -16,10 +16,10 @@
     glCreateProgram,
     glCreateTexture,
     glCreateVertexArray,
-    glUpdateVertexArray,
     glDraw,
     glUpdateTexture,
     glUpdateUniforms,
+    glUpdateVertexArray,
     setCurrentRenderer,
   } from '../src'
 
@@ -62,11 +62,11 @@ void main() {
   })
 
   const texture1 = glCreateTexture({
-    index: 0,
+    unit: 0,
   })
 
   const texture2 = glCreateTexture({
-    index: 1,
+    unit: 1,
     source: new ImageData(new Uint8ClampedArray([255, 0, 0, 100]), 1, 1),
   })
 
