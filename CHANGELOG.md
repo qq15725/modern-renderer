@@ -1,3 +1,12 @@
+# [0.5.0](https://github.com/qq15725/modern-renderer/compare/v0.4.0...v0.5.0) (2023-08-04)
+
+
+### Bug Fixes
+
+* update viewport ([6bfeb85](https://github.com/qq15725/modern-renderer/commit/6bfeb85b032d4e422fd69a595cab3b1fe904679d))
+
+
+
 # [0.4.0](https://github.com/qq15725/modern-renderer/compare/v0.3.4...v0.4.0) (2023-07-24)
 
 
