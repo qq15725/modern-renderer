@@ -13,7 +13,6 @@ import type {
   WebGLBufferTarget,
   WebGLDrawOptions,
   WebGLExtensions,
-  WebGLFramebufferMetadata,
   WebGLFramebufferOptions,
   WebGLProgramMetadata,
   WebGLProgramOptions,
@@ -67,9 +66,9 @@ export class WebGLRenderer {
   readonly related = new WeakMap<object, any>()
 
   /**
-   * Default viewport (bind null framebuffer)
+   * Active viewport
    */
-  viewportNull: WebGLViewport = { x: 0, y: 0, width: 0, height: 0 }
+  viewport: WebGLViewport = { x: 0, y: 0, width: 0, height: 0 }
 
   /**
    * Bound framebuffer
@@ -457,16 +456,6 @@ export class WebGLRenderer {
     }
 
     return framebuffer
-  }
-
-  getFramebufferMetadata(framebuffer: WebGLFramebuffer): WebGLFramebufferMetadata {
-    let metadata: WebGLFramebufferMetadata = this.related.get(framebuffer)
-    if (!metadata) {
-      this.related.set(framebuffer, metadata = {
-        viewport: { x: 0, y: 0, width: 0, height: 0 },
-      })
-    }
-    return metadata
   }
 
   updateFramebuffer(options: WebGLFramebufferOptions): void
@@ -1189,12 +1178,13 @@ export class WebGLRenderer {
     }
   }
 
-  viewport(x = 0, y = 0, width = this.gl.drawingBufferWidth, height = this.gl.drawingBufferHeight) {
-    let viewport = this.viewportNull
+  updateViewport(x: number, y: number, width: number, height: number) {
+    const viewport = this.viewport
 
-    if (this.framebuffer) {
-      viewport = this.getFramebufferMetadata(this.framebuffer).viewport
-    }
+    x = Math.round(x)
+    y = Math.round(y)
+    width = Math.round(width)
+    height = Math.round(height)
 
     if (
       viewport.x === x

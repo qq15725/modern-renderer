@@ -125,8 +125,8 @@ export function glUpdateUniforms(...args: any[]): void {
   (activeRenderer?.updateUniforms as any)(...args)
 }
 
-export function glViewport(x?: number, y?: number, width?: number, height?: number): void {
-  activeRenderer?.viewport(x, y, width, height)
+export function glUpdateViewport(x: number, y: number, width: number, height: number): void {
+  activeRenderer?.updateViewport(x, y, width, height)
 }
 
 export function glClear(mask?: number): void {
